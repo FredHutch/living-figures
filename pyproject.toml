@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project]
+name = "widget-store"
+version = "0.0.1"
+authors = [
+  { name="Samuel Minot", email="sminot@fredhutch.org" },
+]
+description = "Resource of interactive data widgets"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/FredHutch/widgets-store"
+"Bug Tracker" = "https://github.com/FredHutch/widgets-store/issues"
+
+[tool.distutils.bdist_wheel]
+universal = true

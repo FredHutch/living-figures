@@ -3,21 +3,21 @@ import streamlit as st
 import numpy as np
 import plotly.express as px
 from widgets.streamlit.widget import StreamlitWidget
-from widgets.streamlit.resource import StDataFrame
-from widgets.streamlit.resource import StFloat
-from widgets.streamlit.resource import StInteger
-from widgets.streamlit.resource import StSelectString
-from widgets.streamlit.resource import StString
-from widgets.streamlit.resource import StCheckbox
-from widgets.streamlit.resource_list import StExpander
+from widgets.streamlit.resource import *
+from widgets.streamlit.resource_list import *
 from widgets.base.exceptions import WidgetFunctionException
 
 
 class Volcano(StreamlitWidget):
 
-    # requirements = 
+    extra_imports = [
+        "import pandas as pd",
+        "import plotly.express as px",
+        "import numpy as np"
+    ]
 
-    threshold_line_opacity = 0.25
+    requirements = ["plotly"]
+
     selected_columns = []
     
     resources = [
@@ -53,13 +53,20 @@ class Volcano(StreamlitWidget):
                     StFloat(
                         id="threshold",
                         label="Threshold",
-                        help="Threshold used for filtering",
+                        help="Threshold used for filtering. Use 0 to disable.",
                         step=0.00001
                     ),
                     StCheckbox(
                         id="showthreshold",
                         label="Threshold Line",
                         help="Show or hide the threshold line"
+                    ),
+                    StSelectString(
+                        id="marginal",
+                        label="Marginal Plot",
+                        help="Optionally plot the distribution of values to the side",
+                        value="",
+                        options=["histogram", "rug", "box", "violin", ""]
                     )
                 ]
             )
@@ -82,6 +89,15 @@ class Volcano(StreamlitWidget):
                     help="Label used to indicate whether a point passes the filter",
                     value="Passes Filter"
                 ),
+                StSlider(
+                    id="threshold_line_opacity",
+                    label="Threshold Line Opacity",
+                    help="Degree of opacity for the line indicating the threshold",
+                    min_value=0.,
+                    max_value=1.,
+                    step=0.01,
+                    value=0.25
+                ),
                 StSelectString(
                     id="cmap",
                     label="Point Colors",
@@ -100,6 +116,13 @@ class Volcano(StreamlitWidget):
                     help="Height of the rendered plot",
                     value=400,
                     step=1
+                ),
+                StSelectString(
+                    id="template",
+                    label="Template",
+                    help="Theme used for formatting",
+                    options=["plotly", "plotly_white", "plotly_dark", "ggplot2", "seaborn", "simple_white", "none"],
+                    value="none"
                 )
             ]
         )
@@ -214,7 +237,9 @@ class Volcano(StreamlitWidget):
                 pval["trans_cname"]: pval["trans_label"],
                 effect["cname"]: effect["label"]
             },
-            color_discrete_sequence=px.colors.qualitative.__dict__.get(self.get_value("formatting", "cmap"))
+            color_discrete_sequence=px.colors.qualitative.__dict__.get(self.get_value("formatting", "cmap")),
+            marginal_x=None if effect['marginal'] == '' else effect['marginal'],
+            marginal_y=None if pval['marginal'] == '' else pval['marginal']
         )   
 
         return plot_data
@@ -255,8 +280,11 @@ class Volcano(StreamlitWidget):
             return True
 
     def add_styling(self, plot_data:dict) -> dict:
-        for kw in ["title", "width", "height"]:
-            plot_data[kw] = self.get_value("formatting", kw)
+
+        formatting = self.all_values("formatting")
+
+        for kw in ["title", "width", "height", "template"]:
+            plot_data[kw] = formatting[kw]
 
         return plot_data
 
@@ -265,6 +293,7 @@ class Volcano(StreamlitWidget):
         # Get the attributes assigned for the pval and effect columns
         pval = self.all_values("pval")
         effect = self.all_values("effect")
+        threshold_line_opacity = self.get_value("formatting", "threshold_line_opacity")
 
         if pval["showthreshold"] and pval["threshold"] != 0:
             fig.add_hline(
@@ -272,17 +301,17 @@ class Volcano(StreamlitWidget):
                     pval["threshold"],
                     pval["trans"]
                 ),
-                opacity=self.threshold_line_opacity
+                opacity=threshold_line_opacity
             )
 
         if effect["showthreshold"]:
             fig.add_vline(
                 x=effect["threshold"],
-                opacity=self.threshold_line_opacity
+                opacity=threshold_line_opacity
             )
             fig.add_vline(
                 x=-effect["threshold"],
-                opacity=self.threshold_line_opacity
+                opacity=threshold_line_opacity
             )
 
     def update_select_menu(self, resource_id, df:pd.DataFrame, criteria=None) -> None:
