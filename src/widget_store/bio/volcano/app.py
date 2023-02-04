@@ -3,8 +3,14 @@ import streamlit as st
 import numpy as np
 import plotly.express as px
 from widgets.streamlit.widget import StreamlitWidget
-from widgets.streamlit.resource import *
-from widgets.streamlit.resource_list import *
+from widgets.streamlit.resource import StDataFrame
+from widgets.streamlit.resource import StSelectString
+from widgets.streamlit.resource import StString
+from widgets.streamlit.resource import StFloat
+from widgets.streamlit.resource import StCheckbox
+from widgets.streamlit.resource import StSlider
+from widgets.streamlit.resource import StInteger
+from widgets.streamlit.resource_list import StExpander
 from widgets.base.exceptions import WidgetFunctionException
 
 
@@ -19,7 +25,7 @@ class Volcano(StreamlitWidget):
     requirements = ["plotly"]
 
     selected_columns = []
-    
+
     resources = [
         StDataFrame(
             id="df",
@@ -64,13 +70,16 @@ class Volcano(StreamlitWidget):
                     StSelectString(
                         id="marginal",
                         label="Marginal Plot",
-                        help="Optionally plot the distribution of values to the side",
+                        help="Optionally plot the distribution of values to the side", # noqa
                         value="",
                         options=["histogram", "rug", "box", "violin", ""]
                     )
                 ]
             )
-            for elem, label in [("pval", "Options: p-value"), ("effect", "Options: effect size")]
+            for elem, label in [
+                ("pval", "Options: p-value"),
+                ("effect", "Options: effect size")
+            ]
         ],
         StExpander(
             id="formatting",
@@ -86,13 +95,13 @@ class Volcano(StreamlitWidget):
                 StString(
                     id="filter_label",
                     label="Filter Label",
-                    help="Label used to indicate whether a point passes the filter",
+                    help="Label used to indicate whether a point passes the filter", # noqa
                     value="Passes Filter"
                 ),
                 StSlider(
                     id="threshold_line_opacity",
                     label="Threshold Line Opacity",
-                    help="Degree of opacity for the line indicating the threshold",
+                    help="Degree of opacity for the line indicating the threshold", # noqa
                     min_value=0.,
                     max_value=1.,
                     step=0.01,
@@ -121,7 +130,15 @@ class Volcano(StreamlitWidget):
                     id="template",
                     label="Template",
                     help="Theme used for formatting",
-                    options=["plotly", "plotly_white", "plotly_dark", "ggplot2", "seaborn", "simple_white", "none"],
+                    options=[
+                        "plotly",
+                        "plotly_white",
+                        "plotly_dark",
+                        "ggplot2",
+                        "seaborn",
+                        "simple_white",
+                        "none"
+                    ],
                     value="none"
                 )
             ]
@@ -132,7 +149,7 @@ class Volcano(StreamlitWidget):
 
         # Set up the color map using the plotly express palettes
         self.setup_px_cmap("formatting", "cmap")
-        
+
         # Get the Data Table
         df = self.get_value("df")
 
@@ -183,13 +200,12 @@ class Volcano(StreamlitWidget):
             df,
             criteria=lambda v: isinstance(v, float) and v >= 1 and v >= 0
         )
-        
+
         self.update_select_menu(
             ["effect", "cname"],
             df,
             criteria=lambda v: isinstance(v, float)
         )
-
 
     def setup_px_cmap(self, *resource_id):
         """Set up a multi-select resource with the plotly express palettes."""
@@ -209,15 +225,15 @@ class Volcano(StreamlitWidget):
 
         self.set(*resource_id, "value", px_cmaps[0])
 
-    def start_plot_data(self, df:pd.DataFrame) -> dict:
+    def start_plot_data(self, df: pd.DataFrame) -> dict:
 
         # Get the attributes assigned for the pval and effect columns
         pval = self.all_values("pval")
         effect = self.all_values("effect")
 
         # Add the transformation column name and label
-        pval["trans_cname"] = pval['cname'] if pval['trans'] == "" else f"{pval['cname']} ({pval['trans']})"
-        pval["trans_label"] = pval['cname'] if pval['trans'] == "" else f"{pval['label']} ({pval['trans']})"
+        pval["trans_cname"] = pval['cname'] if pval['trans'] == "" else f"{pval['cname']} ({pval['trans']})" # noqa
+        pval["trans_label"] = pval['cname'] if pval['trans'] == "" else f"{pval['label']} ({pval['trans']})" # noqa
 
         # Set up the plot data
         plot_data = dict(
@@ -237,15 +253,17 @@ class Volcano(StreamlitWidget):
                 pval["trans_cname"]: pval["trans_label"],
                 effect["cname"]: effect["label"]
             },
-            color_discrete_sequence=px.colors.qualitative.__dict__.get(self.get_value("formatting", "cmap")),
-            marginal_x=None if effect['marginal'] == '' else effect['marginal'],
+            color_discrete_sequence=px.colors.qualitative.__dict__.get(
+                self.get_value("formatting", "cmap")
+            ),
+            marginal_x=None if effect['marginal'] == '' else effect['marginal'], # noqa
             marginal_y=None if pval['marginal'] == '' else pval['marginal']
-        )   
+        )
 
         return plot_data
 
-    def add_filtering(self, plot_data:dict) -> dict:
-        
+    def add_filtering(self, plot_data: dict) -> dict:
+
         # Test each point to see if it passes the filter
         passes_filter = plot_data["data_frame"].apply(
             self.test_passes_filter,
@@ -265,21 +283,28 @@ class Volcano(StreamlitWidget):
         plot_data["color"] = "passes_filter"
 
         # Modify the label which is displayed
-        plot_data["labels"]["passes_filter"] = self.get_value("formatting", "filter_label")
+        plot_data["labels"]["passes_filter"] = self.get_value(
+            "formatting",
+            "filter_label"
+        )
 
         return plot_data
 
-    def test_passes_filter(self, r:pd.Series):
+    def test_passes_filter(self, r: pd.Series):
         """Test whether a single column passes the filter."""
 
-        if r[self.get_value("pval", "cname")] > self.get_value("pval", "threshold"):
+        if r[
+            self.get_value("pval", "cname")
+        ] > self.get_value("pval", "threshold"):
             return False
-        if np.abs(r[self.get_value("effect", "cname")]) < self.get_value("effect", "threshold"):
+        if np.abs(r[
+            self.get_value("effect", "cname")
+        ]) < self.get_value("effect", "threshold"):
             return False
         else:
             return True
 
-    def add_styling(self, plot_data:dict) -> dict:
+    def add_styling(self, plot_data: dict) -> dict:
 
         formatting = self.all_values("formatting")
 
@@ -293,7 +318,10 @@ class Volcano(StreamlitWidget):
         # Get the attributes assigned for the pval and effect columns
         pval = self.all_values("pval")
         effect = self.all_values("effect")
-        threshold_line_opacity = self.get_value("formatting", "threshold_line_opacity")
+        threshold_line_opacity = self.get_value(
+            "formatting",
+            "threshold_line_opacity"
+        )
 
         if pval["showthreshold"] and pval["threshold"] != 0:
             fig.add_hline(
@@ -314,12 +342,12 @@ class Volcano(StreamlitWidget):
                 opacity=threshold_line_opacity
             )
 
-    def update_select_menu(self, resource_id, df:pd.DataFrame, criteria=None) -> None:
+    def update_select_menu(self, resource_id, df: pd.DataFrame, criteria=None):
 
         options = list(df.columns.values)
 
         # If the currently selected value is not in the list of options
-        if self.get_value(*resource_id) is None or self.get_value(*resource_id) not in options:
+        if self.get_value(*resource_id) is None or self.get_value(*resource_id) not in options: # noqa
 
             # Set the options
             self.set(*resource_id, "options", options, update=False)
@@ -346,17 +374,20 @@ class Volcano(StreamlitWidget):
         )
 
         for cname, score in column_scores.items():
-            if score ==  column_scores.max() and cname not in self.selected_columns:
+            if score ==  column_scores.max() and cname not in self.selected_columns: # noqa
                 self.selected_columns.append(cname)
                 return cname
 
-    def transform_pval(self, v:float, trans: str):
+    def transform_pval(self, v: float, trans: str):
         if trans == "-log10":
             return -np.log10(v)
         elif trans == "":
             return v
         else:
-            raise WidgetFunctionException(f"Unspecified transformation: {trans}")
+            raise WidgetFunctionException(
+                f"Unspecified transformation: {trans}"
+            )
+
 
 if __name__ == "__main__":
     volcano = Volcano()
