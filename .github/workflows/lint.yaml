@@ -35,7 +35,7 @@ jobs:
 
       - name: Run Tests
         run: |
-          pytest --cov-report term-missing --cov=widgets
+          pytest --cov-report term-missing --cov=widget_store
           coverage xml
 
       - name: Get test coverage
