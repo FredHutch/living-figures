@@ -1,3 +1,4 @@
 widgets-lib
 plotly
 pandas
+scipy
