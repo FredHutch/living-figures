@@ -18,13 +18,33 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
     """
 
     children = [
-        StREBASE(id="rebase"),
-        wist.StDataFrame(id="genomes_annot", label="Genome Annotations"),
-        wist.StDownloadDataFrame(target="genomes_annot", label="Download Genome Annotations"),
-        wist.StDataFrame(id="motifs_annot", label="Motif Annotations"),
-        wist.StDownloadDataFrame(target="motifs_annot", label="Download Motif Annotations"),
-        wist.StMultiSelect(id='hidden_genomes', label="Hide Genomes"),
-        wist.StMultiSelect(id='hidden_motifs', label="Hide Motifs"),
+        StREBASE(
+            id="rebase"
+        ),
+        wist.StDataFrame(
+            id="genomes_annot",
+            label="Genome Annotations"
+        ),
+        wist.StDownloadDataFrame(
+            target="genomes_annot",
+            label="Download Genome Annotations"
+        ),
+        wist.StDataFrame(
+            id="motifs_annot", 
+            label="Motif Annotations"
+        ),
+        wist.StDownloadDataFrame(
+            target="motifs_annot", 
+            label="Download Motif Annotations"
+        ),
+        wist.StMultiSelect(
+            id='hidden_genomes', 
+            label="Hide Genomes"
+        ),
+        wist.StMultiSelect(
+            id='hidden_motifs', 
+            label="Hide Motifs"
+        ),
         wist.StSelectString(
             id='genome_axis',
             label="Show Genomes On",
@@ -86,7 +106,7 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
             max_value=100,
             value=25,
             step=1,
-            help="Only show motifs which are present in a single genome at this minimum threshold"
+            help="Only show motifs present at this minimum threshold"
         ),
         wist.StInteger(
             id="min_prevalence",
@@ -94,7 +114,7 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
             min_value=1,
             value=1,
             step=1,
-            help="Only show motifs which are present in at least this many genomes"
+            help="Only show motifs which are present in sufficient genomes"
         )
     ]
 
@@ -234,7 +254,8 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
         # If the user wants to sort the enzymes by an annotation
         if self.get(["sort_motifs_by"]) == "Motif Annotations":
 
-            assert len(self.get(["annot_motifs_by"])) > 0, "Must specify motif annotations for sorting"
+            msg = "Must specify motif annotations for sorting"
+            assert len(self.get(["annot_motifs_by"])) > 0, msg
 
             # Sort the annotation table
             enzyme_annot_df = motif_annot.reindex(
@@ -259,17 +280,18 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
                 columns=enzyme_annot_df.index.values
             )
 
-        # Otherwise, the annotations should be made to match the order of the genomes
+        # Otherwise, the annotations should match the order of the genomes
         else:
             enzyme_annot_df = motif_annot.reindex(
-                columns=self.get(["annot_motifs_by"]) if len(self.get(["annot_motifs_by"])) > 0 else ['none'],
+                columns=self.get(["annot_motifs_by"]) if len(self.get(["annot_motifs_by"])) > 0 else ['none'], # noqa
                 index=value_df.columns.values
             )
 
         # If the user wants to sort the genomes by an annotation
         if self.get(["sort_genomes_by"]) == "Genome Annotations":
 
-            assert len(self.get(["annot_genomes_by"])) > 0, "Must specify genome annotations for sorting"
+            msg = "Must specify genome annotations for sorting"
+            assert len(self.get(["annot_genomes_by"])) > 0, msg
 
             # Sort the genome annotation table
             genomes_annot_df = genomes_annot.reindex(
@@ -294,10 +316,10 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
                 index=genomes_annot_df.index.values
             )
 
-        # Otherwise, the annotations should be made to match the order of the genomes
+        # Otherwise, the annotations should match the order of the genomes
         else:
             genomes_annot_df = genomes_annot.reindex(
-                columns=self.get(["annot_genomes_by"]) if len(self.get(["annot_genomes_by"])) > 0 else ['none'],
+                columns=self.get(["annot_genomes_by"]) if len(self.get(["annot_genomes_by"])) > 0 else ['none'], # noqa
                 index=value_df.index.values
             )
 
@@ -311,8 +333,14 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
 
         # Set the fraction of the plot used for the marginal annotation
         # depending on the number of those annotations
-        enzyme_annot_frac = min(0.5, 0.02 + (0.05 * float(len(self.get(["annot_motifs_by"])))))
-        genomes_annot_frac = min(0.5, 0.02 + (0.05 * float(len(self.get(["annot_genomes_by"])))))
+        enzyme_annot_frac = min(
+            0.5,
+            0.02 + (0.05 * float(len(self.get(["annot_motifs_by"]))))
+        )
+        genomes_annot_frac = min(
+            0.5,
+            0.02 + (0.05 * float(len(self.get(["annot_genomes_by"]))))
+        )
 
         # If the genomes are being displayed on the horizontal axis
         if self.get(['genome_axis']) == "Columns":
@@ -336,7 +364,12 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
             # Compute the data for the genome-marginal barplot
             genome_bar_x = value_df.columns.values
             genome_bar_y = (value_df > 0).sum(axis=0)
-            genome_bar_text = list(map(lambda i: f"{i[0]:,} motifs detected in {i[1]}", zip(genome_bar_y, genome_bar_x)))
+            genome_bar_text = list(
+                map(
+                    lambda i: f"{i[0]:,} motifs detected in {i[1]}",
+                    zip(genome_bar_y, genome_bar_x)
+                )
+            )
             genome_bar_orientation = "v"
 
             # Place the genome-marginal barplot in the layout
@@ -346,7 +379,12 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
             # Compute the data for the motif-marginal barplot
             motif_bar_x = (value_df > 0).sum(axis=1)
             motif_bar_y = value_df.index.values
-            motif_bar_text = list(map(lambda i: f"Motif {i[0]} detected in {i[1]:,} genomes", zip(motif_bar_y, motif_bar_x)))
+            motif_bar_text = list(
+                map(
+                    lambda i: f"Motif {i[0]} detected in {i[1]:,} genomes",
+                    zip(motif_bar_y, motif_bar_x)
+                )
+            )
             motif_bar_orientation = "h"
 
             # Place the motif-marginal barplot in the layout
@@ -376,7 +414,12 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
             # Compute the data for the marginal barplot
             genome_bar_x = (value_df > 0).sum(axis=1)
             genome_bar_y = value_df.index.values
-            genome_bar_text = list(map(lambda i: f"{i[0]:,} motifs detected in {i[1]}", zip(genome_bar_x, genome_bar_y)))
+            genome_bar_text = list(
+                map(
+                    lambda i: f"{i[0]:,} motifs detected in {i[1]}",
+                    zip(genome_bar_x, genome_bar_y)
+                )
+            )
             genome_bar_orientation = "h"
 
             # Place the genome-marginal barplot in the layout
@@ -386,7 +429,12 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
             # Compute the data for the motif-marginal barplot
             motif_bar_x = value_df.columns.values
             motif_bar_y = (value_df > 0).sum(axis=0)
-            motif_bar_text = list(map(lambda i: f"Motif {i[0]} detected in {i[1]:,} genomes", zip(motif_bar_x, motif_bar_y)))
+            motif_bar_text = list(
+                map(
+                    lambda i: f"Motif {i[0]} detected in {i[1]:,} genomes",
+                    zip(motif_bar_x, motif_bar_y)
+                )
+            )
             motif_bar_orientation = "v"
 
             # Place the motif-marginal barplot in the layout
@@ -587,13 +635,14 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
             value_df.max() >= user_inputs['min_fraction']
         ]
 
-        # MASK ANY MOTIFS WHICH ARE NOT FOUND IN THE SPECIFIED NUMBER OF GENOMES
-        if user_inputs['min_prevalence'] > 1:
+        # MASK ANY MOTIFS WHICH ARE NOT FOUND IN SUFFICIENT GENOMES
+        min_prev = user_inputs['min_prevalence']
+        if min_prev > 1:
 
             # Remove the motifs which do not meet the threshold
             value_df = value_df.reindex(
                 columns=value_df.columns.values[
-                    (value_df > 0).sum() >= user_inputs['min_prevalence']
+                    (value_df > 0).sum() >= min_prev
                 ]
             )
 
@@ -606,9 +655,8 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
 
             # If no motifs are left
             if value_df.shape[0] == 0:
-                self.main_container.warning(
-                    f"No motifs are found in >= {user_inputs['min_prevalence']} genomes"
-                )
+                msg = f"No motifs are found in >= {min_prev} genomes"
+                self.main_container.warning(msg)
                 return None, None
 
         # SORT THE ROWS/COLUMNS

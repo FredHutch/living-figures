@@ -88,7 +88,7 @@ def parse_rebase(uploaded_file):
     # Any enzyme without a name will be named for its recognition sequence
     df = df.assign(
         enz_name=df.apply(
-            lambda r: r['enz_name'] if not pd.isnull(r['enz_name']) else f"Unknown - {r['rec_seq']}",
+            lambda r: r['enz_name'] if not pd.isnull(r['enz_name']) else f"Unknown - {r['rec_seq']}", # noqa
             axis=1
         )
     )
@@ -108,7 +108,10 @@ def parse_rebase(uploaded_file):
 
 
 def format_rebase_text(r):
-    """Format the string which contains the complete set of REBASE information."""
+    """
+    Format the string which contains the complete set of REBASE information.
+    """
+
     return "<br>".join(
         [
             f"{k}: {v}"
