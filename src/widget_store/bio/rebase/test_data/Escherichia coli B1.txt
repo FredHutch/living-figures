@@ -1,0 +1,181 @@
+<* REBASE PacBio data as of 08/15/2021 *>
+
+
+<* Starting org# 49947 - Escherichia coli B1 *>
+
+<* org# 49947 - PacBio records assigned to enzymes *>
+
+<org_num>49947
+<org_name>Escherichia coli B1
+<coverage>199.1
+<enz_type>2
+<sub_type>a
+<enz_name>M.Fnu1232I
+<rec_seq>GATC
+<meth_base>2
+<meth_type>6
+<comp_meth_base>3
+<comp_meth_type>6
+<percent_detected>99.6
+<comp_percent_detected>99.6
+<complete_genome>y
+<enz_comment>recognition sequence confirmed on genome by PacBio
+<>
+
+<* org# 49947 - PacBio records not yet assigned to enzymes *>
+
+<org_num>49947
+<org_name>Escherichia coli B1
+<coverage>198.8
+<rec_seq>AGAAAC
+<meth_base>5
+<meth_type>6
+<percent_detected>98.4
+<pb_comment>recognition sequence confirmed on genome by PacBio
+<>
+
+<org_num>49947
+<org_name>Escherichia coli B1
+<coverage>197.8
+<rec_seq>GANNNNNNNTAYG
+<meth_base>2
+<meth_type>6
+<comp_meth_base>10
+<comp_meth_type>6
+<percent_detected>98.9
+<comp_percent_detected>98.7
+<pb_comment>recognition sequence confirmed on genome by PacBio
+<>
+
+<org_num>49947
+<org_name>Escherichia coli B1
+<coverage>223.2
+<rec_seq>ANGGCCNNNNCTNNNA
+<meth_base>4
+<meth_type>99
+<percent_detected>83.3
+<pb_comment>recognition sequence confirmed on genome by PacBio
+<>
+
+<* org# 49947 - Enzymes not assigned to PacBio records *>
+
+<org_num>49947
+<org_name>Escherichia coli B1
+<enz_name>Fnu1232ORF85P
+<enz_type>4
+<complete_genome>y
+<>
+
+<org_num>49947
+<org_name>Escherichia coli B1
+<enz_name>Fnu1232McrBCP
+<enz_type>4
+<complete_genome>y
+<enz_comment>used for GenBank CP077117
+<>
+
+<org_num>49947
+<org_name>Escherichia coli B1
+<enz_name>M.Fnu1232ORF8240P
+<enz_type>2
+<sub_type>b
+<complete_genome>y
+<>
+
+<org_num>49947
+<org_name>Escherichia coli B1
+<enz_name>Fnu1232ORF7175P
+<enz_type>2
+<complete_genome>y
+<>
+
+<org_num>49947
+<org_name>Escherichia coli B1
+<enz_name>M.Fnu1232ORF7175P
+<enz_type>2
+<meth_type>5
+<complete_genome>y
+<>
+
+<org_num>49947
+<org_name>Escherichia coli B1
+<enz_name>Fnu1232ORF6380P
+<enz_type>2
+<sub_type>Ga
+<meth_type>6
+<complete_genome>y
+<>
+
+<org_num>49947
+<org_name>Escherichia coli B1
+<enz_name>Fnu1232ORF2430P
+<enz_type>1
+<complete_genome>y
+<>
+
+<org_num>49947
+<org_name>Escherichia coli B1
+<enz_name>M.Fnu1232ORF2430P
+<enz_type>1
+<sub_type>c
+<meth_type>6
+<complete_genome>y
+<>
+
+<org_num>49947
+<org_name>Escherichia coli B1
+<enz_name>S1.Fnu1232ORF2430P
+<enz_type>1
+<complete_genome>y
+<>
+
+<org_num>49947
+<org_name>Escherichia coli B1
+<enz_name>S2.Fnu1232ORF2430P
+<enz_type>1
+<complete_genome>y
+<>
+
+<org_num>49947
+<org_name>Escherichia coli B1
+<enz_name>Fnu1232ORF2635P
+<enz_type>2
+<sub_type>Gc
+<meth_type>6
+<complete_genome>y
+<>
+
+<org_num>49947
+<org_name>Escherichia coli B1
+<enz_name>M.Fnu1232ORF2425P
+<enz_type>2
+<sub_type>a
+<complete_genome>y
+<>
+
+<org_num>49947
+<org_name>Escherichia coli B1
+<enz_name>Fnu1232ORF3915P
+<enz_type>3
+<complete_genome>y
+<>
+
+<org_num>49947
+<org_name>Escherichia coli B1
+<enz_name>M1.Fnu1232ORF3915P
+<enz_type>3
+<sub_type>b
+<meth_type>6
+<complete_genome>y
+<>
+
+<org_num>49947
+<org_name>Escherichia coli B1
+<enz_name>M2.Fnu1232ORF3915P
+<enz_type>3
+<sub_type>b
+<meth_type>6
+<complete_genome>y
+<>
+
+
