@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 where = ["src"]
 
 [project]
-name = "widget-store"
+name = "living-figures"
 version = "0.0.1"
 authors = [
   { name="Samuel Minot", email="sminot@fredhutch.org" },
@@ -21,7 +21,7 @@ classifiers = [
 ]
 
 [tool.setuptools.dynamic]
-version = {attr = "widget_store.__version__"}
+version = {attr = "living_figures.__version__"}
 
 [project.urls]
 "Homepage" = "https://github.com/FredHutch/widgets-store"

@@ -1,1 +1,1 @@
-from widget_store.bio.volcano.app import Volcano # noqa
+from living_figures.bio.volcano.app import Volcano # noqa

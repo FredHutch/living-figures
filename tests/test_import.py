@@ -1,5 +1,5 @@
-from widget_store.bio.volcano.app import Volcano # noqa
-from widget_store.bio.rebase.widgets import PanEpiGenomeBrowser # noqa
+from living_figures.bio.volcano.app import Volcano # noqa
+from living_figures.bio.rebase.widgets import PanEpiGenomeBrowser # noqa
 import unittest
 
 
