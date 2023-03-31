@@ -1,5 +1,5 @@
-# Widget Store
-Collection of useful widgets
+# Living Figures
+Collection of useful interactive data widgets
 
 ## Widgets
 
@@ -18,7 +18,7 @@ of [Streamlit](https://streamlit.io/).
 All of the widgets provided in this store can be installed with:
 
 ```
-pip install widget-store
+pip install living-figures
 ```
 
 Once installed, you can load your data into one of these widgets
