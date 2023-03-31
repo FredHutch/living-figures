@@ -30,19 +30,19 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
             label="Download Genome Annotations"
         ),
         wist.StDataFrame(
-            id="motifs_annot", 
+            id="motifs_annot",
             label="Motif Annotations"
         ),
         wist.StDownloadDataFrame(
-            target="motifs_annot", 
+            target="motifs_annot",
             label="Download Motif Annotations"
         ),
         wist.StMultiSelect(
-            id='hidden_genomes', 
+            id='hidden_genomes',
             label="Hide Genomes"
         ),
         wist.StMultiSelect(
-            id='hidden_motifs', 
+            id='hidden_motifs',
             label="Hide Motifs"
         ),
         wist.StSelectString(

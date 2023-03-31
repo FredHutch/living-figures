@@ -6,7 +6,7 @@ def convert_text_to_scalar(c: pd.Series):
 
     # Get the sorted list of values
     unique_values = c.dropna().drop_duplicates().sort_values()
-    
+
     # Assign each value to an index position
     value_map = pd.Series(dict(zip(unique_values, range(len(unique_values)))))
 

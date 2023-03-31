@@ -1,2 +1,4 @@
-widgets-lib
+widgets-lib>=2.6.0
 plotly
+pandas
+scipy
