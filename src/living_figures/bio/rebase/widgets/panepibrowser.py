@@ -40,6 +40,9 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
     pyodide_requirements = ["scipy"]
 
     children = [
+        wist.StResource(
+            id='plotting'
+        ),
         wist.StExpander(
             id='files',
             label="Input Files",
@@ -74,8 +77,14 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
             children=[
                 wist.StExpander(
                     id="contents",
-                    expanded=True,
+                    expanded=False,
                     children=[
+                        wist.StString(
+                            id='title'
+                        ),
+                        wist.StTextArea(
+                            id='description'
+                        ),
                         wist.StMultiSelect(
                             id='hidden_genomes',
                             label="Hide Genomes"
@@ -106,7 +115,7 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
                 ),
                 wist.StExpander(
                     id="annotations",
-                    expanded=True,
+                    expanded=False,
                     children=[
                         wist.StMultiSelect(
                             id="annot_genomes_by",
@@ -139,7 +148,7 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
                 ),
                 wist.StExpander(
                     id="formatting",
-                    expanded=True,
+                    expanded=False,
                     children=[
                         wist.StSelectString(
                             id="heatmap_cpal",
@@ -153,13 +162,17 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
                             options=px.colors.named_colorscales(),
                             value="bluered"
                         ),
-                        wist.StInteger(
-                            label="Figure Width",
-                            id="figure_width",
-                            min_value=100,
-                            max_value=1200,
-                            step=1,
-                            value=600
+                        wist.StFloat(
+                            id="genome_annot_width",
+                            label="Genome Annotation Width",
+                            value=0.05,
+                            min=0.
+                        ),
+                        wist.StFloat(
+                            id="enzyme_annot_width",
+                            label="Enzyme Annotation Width",
+                            value=0.05,
+                            min=0.
                         ),
                         wist.StInteger(
                             label="Figure Height",
@@ -399,15 +412,18 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
             convert_text_to_scalar
         )
 
+        # Get the formatting parameters
+        formatting = self._get_child("columns", "formatting").all_values()
+
         # Set the fraction of the plot used for the marginal annotation
         # depending on the number of those annotations
         enzyme_annot_frac = min(
             0.5,
-            0.02 + (0.05 * float(len(annot_params["annot_motifs_by"])))
+            0.02 + (formatting["enzyme_annot_width"] * float(len(annot_params["annot_motifs_by"])))
         )
         genomes_annot_frac = min(
             0.5,
-            0.02 + (0.05 * float(len(annot_params["annot_genomes_by"])))
+            0.02 + (formatting["genome_annot_width"] * float(len(annot_params["annot_genomes_by"])))
         )
 
         # If the genomes are being displayed on the horizontal axis
@@ -509,9 +525,6 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
             motif_bar_nrows = 3
             motif_bar_ncols = 2
 
-        # Get the formatting parameters
-        formatting = self._get_child("columns", "formatting").all_values()
-
         # The size of the marginal plots is driven by the number of annotations
         row_heights = [enzyme_annot_frac, 1 - enzyme_annot_frac, 0.1]
         column_widths = [genomes_annot_frac, 1 - genomes_annot_frac, 0.1]
@@ -605,13 +618,28 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
         # Set up the size of the figure
         fig.update_layout(
             height=formatting['figure_height'],
-            width=formatting['figure_width'],
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)'
         )
 
-        # Return the figure
-        self.main_container.plotly_chart(fig, use_container_width=True)
+        # Display the figure in the 'plotting' container
+        plot_area = self._get_child('plotting').main_container
+
+        # If there is a title
+        title = self.get(["columns", "contents", "title"])
+        if title is not None:
+            plot_area.write(f"### {title}")
+
+        # Show the chart
+        plot_area.plotly_chart(
+            fig,
+            use_container_width=True
+        )
+
+        # If there is a description
+        description = self.get(["columns", "contents", "description"])
+        if description is not None:
+            plot_area.write(description)
 
     def join_motif_annots(self) -> pd.DataFrame:
         """
