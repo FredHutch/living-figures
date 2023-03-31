@@ -1,0 +1,1 @@
+from living_figures.bio.volcano.app import Volcano # noqa

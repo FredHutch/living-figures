@@ -25,7 +25,7 @@ Once installed, you can load your data into one of these widgets
 and save an interactive HTML file with:
 
 ```#!/usr/bin/env python
-from widget_store.bio import Volcano
+from living_figures.bio import Volcano
 import pandas as pd
 
 # Instantiate the widget

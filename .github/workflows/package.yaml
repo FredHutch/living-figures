@@ -33,7 +33,7 @@ jobs:
       - name: Test install
         run: |
           pip install .
-          python -c "import widget_store"
+          python -c "import living_figures"
 
       - name: Build python package
         run: |
