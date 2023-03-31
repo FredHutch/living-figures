@@ -48,6 +48,10 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
                 StREBASE(
                     id="rebase"
                 ),
+                wist.StDownloadDataFrame(
+                    target="rebase",
+                    label="Download REBASE Data"
+                ),
                 wist.StDataFrame(
                     id="genomes_annot",
                     label="Genome Annotations"
@@ -725,6 +729,12 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
                 msg = f"No motifs are found in >= {min_prev} genomes"
                 self.main_container.warning(msg)
                 return None, None
+
+        # If there is only one genome or one motif
+        if value_df.shape[0] < 2 or value_df.shape[1] < 2:
+            msg = "Please provide information for multiple genomes"
+            self.main_container.warning(msg)
+            return None, None
 
         # SORT THE ROWS/COLUMNS
         value_df = sort_table(value_df)

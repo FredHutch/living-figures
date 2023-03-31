@@ -76,24 +76,56 @@ class StREBASE(StFile):
         for file in files:
 
             if file is not None:
-                genome_name = file.name
 
-                for suffix in [".txt"]:
-                    if genome_name.endswith(suffix):
-                        genome_name = genome_name[:-len(suffix)]
+                # If the user uploaded a CSV
+                if file.name.endswith('.csv'):
 
-                # Try to read the file
-                try:
-                    enzymes = parse_rebase(file)
-                    pass
-                except Exception as e:
-                    self.main_container.warning(
-                        f"Could not read file ({file})\n{str(e)}"
-                    )
+                    # Read the CSV
+                    self.parse_csv(file)
 
-                # Add it to the table, overwriting
-                # any other data for the same genome
-                self.add_genome_data(enzymes, genome_name)
+                # Otherwise
+                else:
+
+                    # Parse the REBASE txt file
+                    self.parse_txt(file)
+
+    def parse_csv(self, file):
+
+        # Read the CSV file
+        df = pd.read_csv(file)
+
+        # Make sure that there is a 'genome' column
+        msg = 'Expected the uploaded CSV to have a "genome" column'
+        assert 'genome' in df.columns.values, msg
+
+        # Iterate over each genome
+        for genome_name, enzymes in df.groupby("genome"):
+
+            # Add it to the table, overwriting
+            # any other data for the same genome
+            self.add_genome_data(enzymes, genome_name)
+
+    def parse_txt(self, file):
+
+        # Get the genome name for this particular file
+        genome_name = file.name
+
+        for suffix in [".txt"]:
+            if genome_name.endswith(suffix):
+                genome_name = genome_name[:-len(suffix)]
+
+        # Try to read the file
+        try:
+            enzymes = parse_rebase(file)
+            pass
+        except Exception as e:
+            self.main_container.warning(
+                f"Could not read file ({file})\n{str(e)}"
+            )
+
+        # Add it to the table, overwriting
+        # any other data for the same genome
+        self.add_genome_data(enzymes, genome_name)
 
     def add_genome_data(self, enzymes: pd.DataFrame, genome_name: str):
 
