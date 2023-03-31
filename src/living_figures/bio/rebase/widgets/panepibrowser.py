@@ -9,6 +9,9 @@ import widgets.streamlit as wist
 from living_figures.bio.rebase.utilities.rebase_file import StREBASE
 from living_figures.helpers.scaling import convert_text_to_scalar
 from living_figures.helpers.sorting import sort_table
+import streamlit as st
+
+st.set_page_config(layout="wide")
 
 
 class PanEpiGenomeBrowser(wist.StreamlitWidget):
@@ -17,109 +20,161 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
     genomes, with input files provided in REBASE format.
     """
 
+    layout = 'wide'
+
+    extra_imports = [
+        "from typing import Tuple, Union",
+        "import pandas as pd",
+        "import plotly.express as px",
+        "import plotly.graph_objects as go",
+        "from plotly.subplots import make_subplots",
+        "from living_figures.bio.rebase.utilities.rebase_file import StREBASE",
+        "from living_figures.bio.rebase.utilities.parse_rebase import parse_rebase",
+        "from living_figures.helpers.scaling import convert_text_to_scalar",
+        "from living_figures.helpers.sorting import sort_table",
+        "from widgets.base.helpers import encode_dataframe_string",
+        "from widgets.base.helpers import parse_dataframe_string"
+    ]
+
+    requirements = ["living_figures", "scipy"]
+    pyodide_requirements = ["scipy"]
+
     children = [
-        StREBASE(
-            id="rebase"
+        wist.StExpander(
+            id='files',
+            label="Input Files",
+            expanded=True,
+            children=[
+                StREBASE(
+                    id="rebase"
+                ),
+                wist.StDataFrame(
+                    id="genomes_annot",
+                    label="Genome Annotations"
+                ),
+                wist.StDownloadDataFrame(
+                    target="genomes_annot",
+                    label="Download Genome Annotations"
+                ),
+                wist.StDataFrame(
+                    id="motifs_annot",
+                    label="Motif Annotations"
+                ),
+                wist.StDownloadDataFrame(
+                    target="motifs_annot",
+                    label="Download Motif Annotations"
+                )
+            ]
         ),
-        wist.StDataFrame(
-            id="genomes_annot",
-            label="Genome Annotations"
-        ),
-        wist.StDownloadDataFrame(
-            target="genomes_annot",
-            label="Download Genome Annotations"
-        ),
-        wist.StDataFrame(
-            id="motifs_annot",
-            label="Motif Annotations"
-        ),
-        wist.StDownloadDataFrame(
-            target="motifs_annot",
-            label="Download Motif Annotations"
-        ),
-        wist.StMultiSelect(
-            id='hidden_genomes',
-            label="Hide Genomes"
-        ),
-        wist.StMultiSelect(
-            id='hidden_motifs',
-            label="Hide Motifs"
-        ),
-        wist.StSelectString(
-            id='genome_axis',
-            label="Show Genomes On",
-            options=["Rows", "Columns"],
-            value="Rows"
-        ),
-        wist.StSelectString(
-            id='sort_genomes_by',
-            label="Sort Genomes By",
-            options=["Motif Presence/Absence", "Genome Annotations"],
-            value="Motif Presence/Absence"
-        ),
-        wist.StSelectString(
-            id='sort_motifs_by',
-            label="Sort Motifs By",
-            options=["Genome Presence/Absence", "Motif Annotations"],
-            value="Genome Presence/Absence"
-        ),
-        wist.StMultiSelect(
-            id="annot_genomes_by",
-            label="Annotate Genomes By"
-        ),
-        wist.StMultiSelect(
-            id="annot_motifs_by",
-            label="Annotate Motifs By"
-        ),
-        wist.StSelectString(
-            id="heatmap_cpal",
-            label="Heatmap Color Palette",
-            options=px.colors.named_colorscales(),
-            value="blues"
-        ),
-        wist.StSelectString(
-            id="annot_cpal",
-            label="Annotation Color Palette",
-            options=px.colors.named_colorscales(),
-            value="bluered"
-        ),
-        wist.StInteger(
-            label="Figure Width",
-            id="figure_width",
-            min_value=100,
-            max_value=1200,
-            step=1,
-            value=600
-        ),
-        wist.StInteger(
-            label="Figure Height",
-            id="figure_height",
-            min_value=100,
-            max_value=1200,
-            step=1,
-            value=600
-        ),
-        wist.StInteger(
-            id="min_fraction",
-            label="Minimum Percentage per Motif",
-            min_value=0,
-            max_value=100,
-            value=25,
-            step=1,
-            help="Only show motifs present at this minimum threshold"
-        ),
-        wist.StInteger(
-            id="min_prevalence",
-            label="Minimum Number of Genomes per Motif",
-            min_value=1,
-            value=1,
-            step=1,
-            help="Only show motifs which are present in sufficient genomes"
+        wist.StColumns(
+            children=[
+                wist.StExpander(
+                    id="contents",
+                    expanded=True,
+                    children=[
+                        wist.StMultiSelect(
+                            id='hidden_genomes',
+                            label="Hide Genomes"
+                        ),
+                        wist.StMultiSelect(
+                            id='hidden_motifs',
+                            label="Hide Motifs"
+                        ),
+                        wist.StInteger(
+                            id="min_fraction",
+                            label="Minimum Percentage per Motif",
+                            min_value=0,
+                            max_value=100,
+                            value=25,
+                            step=1,
+                            help="Only show motifs present at this minimum threshold"
+                        ),
+                        wist.StInteger(
+                            id="min_prevalence",
+                            label="Minimum Number of Genomes per Motif",
+                            min_value=1,
+                            value=1,
+                            step=1,
+                            help="Only show motifs which are present in sufficient genomes"
+                        )
+                    ],
+                    sidebar=False
+                ),
+                wist.StExpander(
+                    id="annotations",
+                    expanded=True,
+                    children=[
+                        wist.StMultiSelect(
+                            id="annot_genomes_by",
+                            label="Annotate Genomes By"
+                        ),
+                        wist.StMultiSelect(
+                            id="annot_motifs_by",
+                            label="Annotate Motifs By"
+                        ),
+                        wist.StSelectString(
+                            id='sort_genomes_by',
+                            label="Sort Genomes By",
+                            options=["Motif Presence/Absence", "Genome Annotations"],
+                            value="Motif Presence/Absence"
+                        ),
+                        wist.StSelectString(
+                            id='sort_motifs_by',
+                            label="Sort Motifs By",
+                            options=["Genome Presence/Absence", "Motif Annotations"],
+                            value="Genome Presence/Absence"
+                        ),
+                        wist.StSelectString(
+                            id='genome_axis',
+                            label="Show Genomes On",
+                            options=["Rows", "Columns"],
+                            value="Rows"
+                        )
+                    ],
+                    sidebar=False
+                ),
+                wist.StExpander(
+                    id="formatting",
+                    expanded=True,
+                    children=[
+                        wist.StSelectString(
+                            id="heatmap_cpal",
+                            label="Heatmap Color Palette",
+                            options=px.colors.named_colorscales(),
+                            value="blues"
+                        ),
+                        wist.StSelectString(
+                            id="annot_cpal",
+                            label="Annotation Color Palette",
+                            options=px.colors.named_colorscales(),
+                            value="bluered"
+                        ),
+                        wist.StInteger(
+                            label="Figure Width",
+                            id="figure_width",
+                            min_value=100,
+                            max_value=1200,
+                            step=1,
+                            value=600
+                        ),
+                        wist.StInteger(
+                            label="Figure Height",
+                            id="figure_height",
+                            min_value=100,
+                            max_value=1200,
+                            step=1,
+                            value=600
+                        )
+                    ],
+                    sidebar=False
+                )
+            ],
+            sidebar=False
         )
     ]
 
     def get_df_vals(self, df_name, cname):
-        df = self.get([df_name])
+        df = self.get(["files", df_name])
         if df.shape[0] > 0:
             return df[
                 cname
@@ -136,13 +191,19 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
         all_options = self.get_df_vals(df_name, cname)
 
         # Get the list of options in the specified input
-        avail_options = self.get([selector], attr="options")
+        avail_options = self.get(
+            ["columns", "contents", selector],
+            attr="options"
+        )
 
         # If they are not the same
         if set(avail_options) != set(all_options):
 
             # Update the menu item
-            self.set([selector], attr="options", value=all_options)
+            self.set(
+                ["columns", "contents", selector],
+                attr="options", value=all_options
+            )
 
     def update_table(self, table, rebase_cname):
         """
@@ -159,7 +220,7 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
             return
 
         # Get the target table which may be updated
-        df = self.get([table])
+        df = self.get(["files", table])
 
         # If the table is empty
         if df.shape[0] == 0:
@@ -191,10 +252,10 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
             ])
 
         # Update the modified table
-        self.set(path=[table], value=df)
+        self.set(path=["files", table], value=df)
 
         # Also update the download button
-        self._get_child(f"download_{table}").run_self()
+        self._get_child("files", f"download_{table}").run_self()
 
     def run_self(self):
 
@@ -213,11 +274,11 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
         self.plot_heatmap()
 
         # Give the user the option to clone this widget
-        self.clone_button()
+        self.clone_button(sidebar=False)
 
     def update_annotation_selectors(self):
 
-        genomes_annot = self.get(["genomes_annot"])
+        genomes_annot = self.get(["files", "genomes_annot"])
         if genomes_annot.shape[0] == 0:
             genomes_annot = pd.DataFrame(dict(id=[]))
         else:
@@ -231,7 +292,7 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
             (genomes_annot, "annot_genomes_by")
         ]:
             self.set(
-                path=[input_elem],
+                path=["columns", "annotations", input_elem],
                 attr="options",
                 value=df.columns.values
             )
@@ -249,19 +310,22 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
         motif_annot = self.join_motif_annots()
 
         # Get the genome annotations
-        genomes_annot = self.get(["genomes_annot"]).set_index('id')
+        genomes_annot = self.get(["files", "genomes_annot"]).set_index('id')
+
+        # Get the annotation parameters
+        annot_params = self._get_child("columns", "annotations").all_values()
 
         # If the user wants to sort the enzymes by an annotation
-        if self.get(["sort_motifs_by"]) == "Motif Annotations":
+        if annot_params["sort_motifs_by"] == "Motif Annotations":
 
             msg = "Must specify motif annotations for sorting"
-            assert len(self.get(["annot_motifs_by"])) > 0, msg
+            assert len(annot_params["annot_motifs_by"]) > 0, msg
 
             # Sort the annotation table
             enzyme_annot_df = motif_annot.reindex(
-                columns=self.get(["annot_motifs_by"])
+                columns=annot_params["annot_motifs_by"]
             ).sort_values(
-                by=self.get(["annot_motifs_by"])
+                by=annot_params["annot_motifs_by"]
             )
 
             # Only keep the motifs which are detected in >=1 genome
@@ -283,21 +347,21 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
         # Otherwise, the annotations should match the order of the genomes
         else:
             enzyme_annot_df = motif_annot.reindex(
-                columns=self.get(["annot_motifs_by"]) if len(self.get(["annot_motifs_by"])) > 0 else ['none'], # noqa
+                columns=annot_params["annot_motifs_by"] if len(annot_params["annot_motifs_by"]) > 0 else ['none'], # noqa
                 index=value_df.columns.values
             )
 
         # If the user wants to sort the genomes by an annotation
-        if self.get(["sort_genomes_by"]) == "Genome Annotations":
+        if annot_params["sort_genomes_by"] == "Genome Annotations":
 
             msg = "Must specify genome annotations for sorting"
-            assert len(self.get(["annot_genomes_by"])) > 0, msg
+            assert len(annot_params["annot_genomes_by"]) > 0, msg
 
             # Sort the genome annotation table
             genomes_annot_df = genomes_annot.reindex(
-                columns=self.get(["annot_genomes_by"])
+                columns=annot_params["annot_genomes_by"]
             ).sort_values(
-                by=self.get(["annot_genomes_by"])
+                by=annot_params["annot_genomes_by"]
             )
 
             # Only keep the genomes which have >=1 motif detected
@@ -319,7 +383,7 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
         # Otherwise, the annotations should match the order of the genomes
         else:
             genomes_annot_df = genomes_annot.reindex(
-                columns=self.get(["annot_genomes_by"]) if len(self.get(["annot_genomes_by"])) > 0 else ['none'], # noqa
+                columns=annot_params["annot_genomes_by"] if len(annot_params["annot_genomes_by"]) > 0 else ['none'], # noqa
                 index=value_df.index.values
             )
 
@@ -335,28 +399,28 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
         # depending on the number of those annotations
         enzyme_annot_frac = min(
             0.5,
-            0.02 + (0.05 * float(len(self.get(["annot_motifs_by"]))))
+            0.02 + (0.05 * float(len(annot_params["annot_motifs_by"])))
         )
         genomes_annot_frac = min(
             0.5,
-            0.02 + (0.05 * float(len(self.get(["annot_genomes_by"]))))
+            0.02 + (0.05 * float(len(annot_params["annot_genomes_by"])))
         )
 
         # If the genomes are being displayed on the horizontal axis
-        if self.get(['genome_axis']) == "Columns":
+        if annot_params['genome_axis'] == "Columns":
 
             # Transpose the DataFrames with genome/motif values
             value_df = value_df.T
             text_df = text_df.T
 
             # The enzyme marginal annotation will be on the rows
-            row_marginal_x = self.get(["annot_motifs_by"])
+            row_marginal_x = annot_params["annot_motifs_by"]
             row_marginal_y = value_df.index.values
             row_marginal_z = enzyme_marginal_z.values
             row_marginal_text = enzyme_annot_df.values
 
             # The genome marginal annotation will be on the columns
-            col_marginal_y = self.get(["annot_genomes_by"])
+            col_marginal_y = annot_params["annot_genomes_by"]
             col_marginal_x = value_df.columns.values
             col_marginal_z = genome_marginal_z.T.values
             col_marginal_text = genomes_annot_df.T.values
@@ -395,18 +459,18 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
         else:
 
             # The genomes must be displayed on the vertical axis
-            assert self.get(['genome_axis']) == "Rows"
+            assert annot_params['genome_axis'] == "Rows"
 
             # The genome/motif data does not need to be transposed
 
             # The enzyme marginal annotation will be on the columns
             col_marginal_x = value_df.columns.values
-            col_marginal_y = self.get(["annot_motifs_by"])
+            col_marginal_y = annot_params["annot_motifs_by"]
             col_marginal_z = enzyme_marginal_z.T.values
             col_marginal_text = enzyme_annot_df.T.values
 
             # The genome marginal annotation will be on the rows
-            row_marginal_x = self.get(["annot_genomes_by"])
+            row_marginal_x = annot_params["annot_genomes_by"]
             row_marginal_y = value_df.index.values
             row_marginal_z = genome_marginal_z.values
             row_marginal_text = genomes_annot_df.values
@@ -441,6 +505,9 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
             motif_bar_nrows = 3
             motif_bar_ncols = 2
 
+        # Get the formatting parameters
+        formatting = self._get_child("columns", "formatting").all_values()
+
         # The size of the marginal plots is driven by the number of annotations
         row_heights = [enzyme_annot_frac, 1 - enzyme_annot_frac, 0.1]
         column_widths = [genomes_annot_frac, 1 - genomes_annot_frac, 0.1]
@@ -464,7 +531,7 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
                 x=value_df.columns.values,
                 y=value_df.index.values,
                 z=value_df.values,
-                colorscale=self.get(["heatmap_cpal"]),
+                colorscale=formatting["heatmap_cpal"],
                 text=text_df.values,
                 hoverinfo="text",
                 colorbar_title="Percent<br>Detection<br>of Motif"
@@ -479,7 +546,7 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
                 x=row_marginal_x,
                 y=row_marginal_y,
                 z=row_marginal_z,
-                colorscale=self.get(["annot_cpal"]),
+                colorscale=formatting["annot_cpal"],
                 text=row_marginal_text,
                 hoverinfo="text",
                 showscale=False,
@@ -494,7 +561,7 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
                 x=col_marginal_x,
                 y=col_marginal_y,
                 z=col_marginal_z,
-                colorscale=self.get(["annot_cpal"]),
+                colorscale=formatting["annot_cpal"],
                 text=col_marginal_text,
                 hoverinfo="text",
                 showscale=False
@@ -533,14 +600,14 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
 
         # Set up the size of the figure
         fig.update_layout(
-            height=self.get(['figure_height']),
-            width=self.get(['figure_width']),
+            height=formatting['figure_height'],
+            width=formatting['figure_width'],
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)'
         )
 
         # Return the figure
-        self.main_container.plotly_chart(fig)
+        self.main_container.plotly_chart(fig, use_container_width=True)
 
     def join_motif_annots(self) -> pd.DataFrame:
         """
@@ -548,7 +615,7 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
         of automatically generated annotations.
         """
 
-        user_annots = self.get(["motifs_annot"])
+        user_annots = self.get(["files", "motifs_annot"])
         if user_annots.shape[0] == 0:
             user_annots = pd.DataFrame(dict(id=[]))
         else:
@@ -567,7 +634,7 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
     def get_motif_annots(self) -> pd.DataFrame:
         """Get the motif annotations from the REBASE files."""
 
-        rebase = self.get(["rebase"])
+        rebase = self.get(["files", "rebase"])
 
         df = pd.DataFrame({
             cname: rebase.groupby(
