@@ -1,4 +1,4 @@
-baseURL: 'http://living-figures.com/'
+baseURL: 'https://living-figures.com/'
 languageCode: 'en-us'
 title: 'Living Figures'
 theme: 'hugo-theme-stack'
