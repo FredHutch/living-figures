@@ -29,7 +29,7 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
         "import plotly.graph_objects as go",
         "from plotly.subplots import make_subplots",
         "from living_figures.bio.rebase.utilities.rebase_file import StREBASE",
-        "from living_figures.bio.rebase.utilities.parse_rebase import parse_rebase",
+        "from living_figures.bio.rebase.utilities.parse_rebase import parse_rebase", # noqa
         "from living_figures.helpers.scaling import convert_text_to_scalar",
         "from living_figures.helpers.sorting import sort_table",
         "from widgets.base.helpers import encode_dataframe_string",
@@ -100,7 +100,7 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
                             max_value=100,
                             value=25,
                             step=1,
-                            help="Only show motifs present at this minimum threshold"
+                            help="Only show motifs present at this minimum threshold" # noqa
                         ),
                         wist.StInteger(
                             id="min_prevalence",
@@ -108,7 +108,7 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
                             min_value=1,
                             value=1,
                             step=1,
-                            help="Only show motifs which are present in sufficient genomes"
+                            help="Only show motifs which are present in sufficient genomes" # noqa
                         )
                     ],
                     sidebar=False
@@ -128,13 +128,13 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
                         wist.StSelectString(
                             id='sort_genomes_by',
                             label="Sort Genomes By",
-                            options=["Motif Presence/Absence", "Genome Annotations"],
+                            options=["Motif Presence/Absence", "Genome Annotations"], # noqa
                             value="Motif Presence/Absence"
                         ),
                         wist.StSelectString(
                             id='sort_motifs_by',
                             label="Sort Motifs By",
-                            options=["Genome Presence/Absence", "Motif Annotations"],
+                            options=["Genome Presence/Absence", "Motif Annotations"], # noqa
                             value="Genome Presence/Absence"
                         ),
                         wist.StSelectString(
@@ -419,11 +419,11 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
         # depending on the number of those annotations
         enzyme_annot_frac = min(
             0.5,
-            0.02 + (formatting["enzyme_annot_width"] * float(len(annot_params["annot_motifs_by"])))
+            0.02 + (formatting["enzyme_annot_width"] * float(len(annot_params["annot_motifs_by"]))) # noqa
         )
         genomes_annot_frac = min(
             0.5,
-            0.02 + (formatting["genome_annot_width"] * float(len(annot_params["annot_genomes_by"])))
+            0.02 + (formatting["genome_annot_width"] * float(len(annot_params["annot_genomes_by"]))) # noqa
         )
 
         # If the genomes are being displayed on the horizontal axis
