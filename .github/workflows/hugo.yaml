@@ -59,8 +59,7 @@ jobs:
           hugo \
             --gc \
             --minify \
-            --baseURL "${{ steps.pages.outputs.base_url }}/" \
-            --destination ../
+            --baseURL "${{ steps.pages.outputs.base_url }}/"
         working-directory: "hugo"
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
