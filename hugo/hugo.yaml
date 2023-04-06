@@ -1,0 +1,9 @@
+baseURL: 'http://living-figures.com/'
+languageCode: 'en-us'
+title: 'Living Figures'
+theme: 'hugo-theme-stack'
+image: 'img/logo-color-150x150.png'
+
+params:
+  article:
+    readingTime: false
