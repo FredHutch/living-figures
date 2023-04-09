@@ -4,6 +4,7 @@ title: "What are Living Figures?"
 draft: false
 description: "Datasets bundled with their own visualization code"
 image: "maddison-mcmurrin-GDumtPpJsT4-unsplash-resized.jpg"
+weight: 10
 categories:
     - Documentation
 tags:
