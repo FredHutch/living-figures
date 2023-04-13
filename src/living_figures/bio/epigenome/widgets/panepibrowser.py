@@ -6,7 +6,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import widgets.streamlit as wist
-from living_figures.bio.rebase.utilities.pacbio_file import StPBMotif
+from living_figures.bio.epigenome.utilities.pacbio_file import StPBMotif
 from living_figures.helpers.scaling import convert_text_to_scalar
 from living_figures.helpers.sorting import sort_table
 import streamlit as st
@@ -28,7 +28,7 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
         "import plotly.express as px",
         "import plotly.graph_objects as go",
         "from plotly.subplots import make_subplots",
-        "from living_figures.bio.rebase.utilities.pacbio_file import StPBMotif",
+        "from living_figures.bio.epigenome.utilities.pacbio_file import StPBMotif",
         "from living_figures.helpers.scaling import convert_text_to_scalar",
         "from living_figures.helpers.sorting import sort_table",
         "from widgets.base.helpers import encode_dataframe_string",
