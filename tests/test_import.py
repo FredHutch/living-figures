@@ -1,5 +1,5 @@
 from living_figures.bio.volcano.app import Volcano # noqa
-from living_figures.bio.rebase.widgets import PanEpiGenomeBrowser # noqa
+from living_figures.bio.epigenome.widgets import PanEpiGenomeBrowser # noqa
 import unittest
 
 

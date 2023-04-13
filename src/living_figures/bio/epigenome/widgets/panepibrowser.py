@@ -6,7 +6,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import widgets.streamlit as wist
-from living_figures.bio.rebase.utilities.rebase_file import StREBASE
+from living_figures.bio.epigenome.utilities.pacbio_file import StPBMotif
 from living_figures.helpers.scaling import convert_text_to_scalar
 from living_figures.helpers.sorting import sort_table
 import streamlit as st
@@ -17,7 +17,7 @@ st.set_page_config(layout="wide")
 class PanEpiGenomeBrowser(wist.StreamlitWidget):
     """
     Visualize the epigenetic information from a collection of
-    genomes, with input files provided in REBASE format.
+    genomes, with input files provided in PacBio motifs.csv format.
     """
 
     layout = 'wide'
@@ -28,8 +28,7 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
         "import plotly.express as px",
         "import plotly.graph_objects as go",
         "from plotly.subplots import make_subplots",
-        "from living_figures.bio.rebase.utilities.rebase_file import StREBASE",
-        "from living_figures.bio.rebase.utilities.parse_rebase import parse_rebase", # noqa
+        "from living_figures.bio.epigenome.utilities.pacbio_file import StPBMotif", # noqa
         "from living_figures.helpers.scaling import convert_text_to_scalar",
         "from living_figures.helpers.sorting import sort_table",
         "from widgets.base.helpers import encode_dataframe_string",
@@ -48,12 +47,12 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
             label="Input Files",
             expanded=True,
             children=[
-                StREBASE(
-                    id="rebase"
+                StPBMotif(
+                    id="pacbio"
                 ),
                 wist.StDownloadDataFrame(
-                    target="rebase",
-                    label="Download REBASE Data"
+                    target="pacbio",
+                    label="Download PacBio Motif Data"
                 ),
                 wist.StDataFrame(
                     id="genomes_annot",
@@ -93,13 +92,13 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
                             id='hidden_motifs',
                             label="Hide Motifs"
                         ),
-                        wist.StInteger(
+                        wist.StFloat(
                             id="min_fraction",
-                            label="Minimum Percentage per Motif",
-                            min_value=0,
-                            max_value=100,
-                            value=25,
-                            step=1,
+                            label="Minimum Fraction per Motif",
+                            min_value=0.,
+                            max_value=1.0,
+                            value=0.25,
+                            step=0.01,
                             help="Only show motifs present at this minimum threshold" # noqa
                         ),
                         wist.StInteger(
@@ -117,6 +116,10 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
                     id="annotations",
                     expanded=False,
                     children=[
+                        wist.StMultiSelect(
+                            id="label_genomes_by",
+                            label="Label Genomes By"
+                        ),
                         wist.StMultiSelect(
                             id="annot_genomes_by",
                             label="Annotate Genomes By"
@@ -222,15 +225,15 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
                 attr="options", value=all_options
             )
 
-    def update_table(self, table, rebase_cname):
+    def update_table(self, table, pacbio_cname):
         """
         Update the specified table, making sure that it contains
         a row with an 'id' value for each of the unique values
-        in the specifed column in the REBASE table.
+        in the specifed column in the PacBio table.
         """
 
-        # Get the list of values from the specified column in the REBASE table
-        all_options = self.get_df_vals("rebase", rebase_cname)
+        # Get the list of values from the specified column in the PacBio table
+        all_options = self.get_df_vals("pacbio", pacbio_cname)
 
         # If there are no options, stop
         if len(all_options) == 0:
@@ -278,11 +281,11 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
 
         # Update the metadata tables, if needed
         self.update_table("genomes_annot", "genome")
-        self.update_table("motifs_annot", "enz_name")
+        self.update_table("motifs_annot", "motif_id")
 
         # Update the hidden_genomes selector
-        self.update_selector_options("rebase", "genome", "hidden_genomes")
-        self.update_selector_options("rebase", "enz_name", "hidden_motifs")
+        self.update_selector_options("pacbio", "genome", "hidden_genomes")
+        self.update_selector_options("pacbio", "motif_id", "hidden_motifs")
 
         # Update the annotation selectors
         self.update_annotation_selectors()
@@ -306,7 +309,8 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
 
         for df, input_elem in [
             (self.join_motif_annots(), "annot_motifs_by"),
-            (genomes_annot, "annot_genomes_by")
+            (genomes_annot, "annot_genomes_by"),
+            (genomes_annot, "label_genomes_by")
         ]:
             self.set(
                 path=["columns", "annotations", input_elem],
@@ -322,7 +326,7 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
         if value_df is None:
             return
 
-        # Add the motif annotations from the REBASE files
+        # Add the motif annotations from the PacBio files
         # to the user-provided motif annotations
         motif_annot = self.join_motif_annots()
 
@@ -402,6 +406,24 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
             genomes_annot_df = genomes_annot.reindex(
                 columns=annot_params["annot_genomes_by"] if len(annot_params["annot_genomes_by"]) > 0 else ['none'], # noqa
                 index=value_df.index.values
+            )
+
+        # If the option was selected to relabel genomes
+        if len(annot_params["label_genomes_by"]) > 0:
+
+            genome_name_map = {}
+            for genome_ix, genome_r in genomes_annot.reindex(
+                columns=annot_params["label_genomes_by"]
+            ).iterrows():
+
+                genome_name_map[
+                    genome_ix
+                ] = f"{' '.join(map(str, genome_r.values))} ({genome_ix})"
+
+            value_df = value_df.rename(index=genome_name_map.get)
+            text_df = text_df.rename(index=genome_name_map.get)
+            genomes_annot_df = genomes_annot_df.rename(
+                index=genome_name_map.get
             )
 
         # For the colors, convert all values to numeric and scale to 0-1
@@ -627,7 +649,7 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
 
         # If there is a title
         title = self.get(["columns", "contents", "title"])
-        if title is not None:
+        if title is not None and len(title) > 0 and title != "None":
             plot_area.write(f"### {title}")
 
         # Show the chart
@@ -664,57 +686,49 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
         )
 
     def get_motif_annots(self) -> pd.DataFrame:
-        """Get the motif annotations from the REBASE files."""
+        """Get the motif annotations from the PacBio files."""
 
-        rebase = self.get(["files", "rebase"])
+        pacbio = self.get(["files", "pacbio"])
 
-        df = pd.DataFrame({
-            cname: rebase.groupby(
-                'enz_name'
-            ).head(
-                1
-            ).set_index(
-                'enz_name'
-            )[cname]
-            for cname in [
-                "enz_type",
-                "sub_type",
-                "meth_base",
-                "meth_type",
-                "comp_meth_base",
-                "rec_seq",
-                "type_label"
+        if pacbio.shape[0] == 0:
+
+            return pd.DataFrame()
+
+        return pacbio.groupby(
+            'motif_id'
+        ).head(
+            1
+        ).set_index(
+            'motif_id'
+        ).reindex(
+            columns=[
+                "motifString",
+                "centerPos",
+                "modificationType",
+                "motif_length"
             ]
-            if cname in rebase.columns.values
-        })
-
-        if 'rec_seq' in df.columns.values:
-            df = df.assign(
-                motif_length=lambda d: d.rec_seq.apply(len)
-            )
-
-        return df
+        )
 
     def prep_heatmap_data(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
         user_inputs = self.all_values(flatten=True)
 
-        if user_inputs["rebase"].shape[0] == 0:
+        if user_inputs["pacbio"].shape[0] == 0:
             self.main_container.info(
-                "Please add REBASE information to get started"
+                "Please add PacBio epigenetic motif information to get started"
             )
             return None, None
 
         # MAKE A WIDE TABLE
-        value_df = user_inputs["rebase"].pivot_table(
+        value_df = user_inputs["pacbio"].pivot_table(
             index="genome",
-            columns="enz_name",
-            values="percent_detected"
+            columns="motif_id",
+            values="fraction"
         ).fillna(0)
 
-        text_df = user_inputs["rebase"].pivot(
+        text_df = user_inputs["pacbio"].pivot(
             index="genome",
-            columns="enz_name",
+            columns="motif_id",
             values="text"
         ).fillna("")
 
