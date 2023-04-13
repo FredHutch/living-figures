@@ -28,7 +28,7 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
         "import plotly.express as px",
         "import plotly.graph_objects as go",
         "from plotly.subplots import make_subplots",
-        "from living_figures.bio.epigenome.utilities.pacbio_file import StPBMotif",
+        "from living_figures.bio.epigenome.utilities.pacbio_file import StPBMotif", # noqa
         "from living_figures.helpers.scaling import convert_text_to_scalar",
         "from living_figures.helpers.sorting import sort_table",
         "from widgets.base.helpers import encode_dataframe_string",
@@ -410,12 +410,12 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
 
         # If the option was selected to relabel genomes
         if len(annot_params["label_genomes_by"]) > 0:
-            
+
             genome_name_map = {}
             for genome_ix, genome_r in genomes_annot.reindex(
                 columns=annot_params["label_genomes_by"]
             ).iterrows():
-                
+
                 genome_name_map[
                     genome_ix
                 ] = f"{' '.join(map(str, genome_r.values))} ({genome_ix})"
