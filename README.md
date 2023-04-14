@@ -25,18 +25,21 @@ Once installed, you can load your data into one of these widgets
 and save an interactive HTML file with:
 
 ```#!/usr/bin/env python
-from living_figures.bio import Volcano
+from living_figures.bio.epigenome.widgets import PanEpiGenomeBrowser
+from pathlib import Path
 import pandas as pd
 
-# Instantiate the widget
-volcano = Volcano()
+# Instantiate the object
+lfig = PanEpiGenomeBrowser()
 
-# Read in your data of interest
-df = pd.read_csv("your_data.csv")
-
-# Add it to the widget
-volcano.set_value("df", df)
+# Read in your data of interest (in this case epigenetic motif CSVs)
+lfig._get_child(
+    "files",
+    "pacbio"
+).parse_files(
+    Path('motif_folder').rglob('*.motifs.csv')
+)
 
 # Save an HTML file
-volcano.to_html("my_volcano.html")
+lfig.to_html(Path("my_epigenomes.html"))
 ```

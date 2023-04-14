@@ -5,6 +5,8 @@ debug.log
 /hugo/public/
 /hugo/resources/_gen/
 /hugo/hugo_stats.json
+/hugo/content/post/*/*.html
+/hugo/content/post/*/*.zip
 
 ### vscode ###
 .vscode/*

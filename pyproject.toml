@@ -7,7 +7,7 @@ where = ["src"]
 
 [project]
 name = "living-figures"
-version = "0.0.1"
+dynamic = ["version"]
 authors = [
   { name="Samuel Minot", email="sminot@fredhutch.org" },
 ]

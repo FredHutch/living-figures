@@ -1,0 +1,4 @@
+"motifString","centerPos","modificationType","fraction","nDetected","nGenome","groupTag","partnerMotifString","meanScore","meanIpdRatio","meanCoverage","objectiveScore"
+"CTTTANNNNNNNTG","4","m6A","0.9924099","1046","1054","CTTTANNNNNNNTG/CANNNNNNNTAAAG","CANNNNNNNTAAAG","95.10516","5.7870927","63.847034","98800.18"
+"CANNNNNNNTAAAG","1","m6A","0.9914611","1045","1054","CTTTANNNNNNNTG/CANNNNNNNTAAAG","CTTTANNNNNNNTG","94.778946","5.4337983","64.055504","98282.52"
+"CAAAAA","5","m6A","0.9823294","7616","7753","CAAAAA","","81.12356","4.784759","61.880646","608002.5"

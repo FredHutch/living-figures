@@ -28,6 +28,7 @@ By running entirely inside your web browser, living figures don't require any se
 You can send a living figure to anyone, and be reasonably sure it will start right up in their web browser.
 
 **You can make your own living figures**  
+All of the living figures on this website can be found at [github.com/FredHutch/living-figures](https://github.com/FredHutch/living-figures) along with the code used to render the website itself.  
 The Python library used to create living figures can be found at [github.com/FredHutch/widgets](https://github.com/FredHutch/widgets).  
 By following some of the examples here, it should be possible to turn your visualization into a living figure.  
 If you'd like to share it with others directly on this website, please [be in touch](https://github.com/FredHutch/living-figures/issues).
