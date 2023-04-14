@@ -14,6 +14,21 @@ class StPBMotif(StFile):
 
     value = pd.DataFrame()
 
+    cname_map = {
+        "Motif": "motifString",
+        "Modified Position": "centerPos",
+        "Motification Type": "modificationType",
+        "% of Motifs Detected": "fraction",
+        "# of Motifs Detected": "nDetected",
+        "# of Motifs in Genome": "nGenome",
+        "Mean QV": "meanScore",
+        "Mean Coverage": "meanCoverage",
+        "Partner Motif": "partnerMotifString",
+        "Mean IPD ratio": "meanIpdRatio",
+        "Group Tag": "groupTag",
+        "Objective Score": "objectiveScore"
+    }
+
     def __init__(
         self,
         id="pacbio_motif",
@@ -87,6 +102,11 @@ class StPBMotif(StFile):
         # Read the CSV file
         motifs = pd.read_csv(file)
 
+        # Apply the column mappings
+        motifs = motifs.rename(
+            columns=self.cname_map
+        )
+
         # Make sure that the expected columns are present
         expected_cnames = [
             "motifString",
@@ -112,9 +132,11 @@ class StPBMotif(StFile):
         # If any of those columns are missing
         if len(missing_cnames) > 0:
             # Warn the user
-            self.main_container.warning(
-                f"Did not find expected columns - {', '.join(missing_cnames)}"
-            )
+            msg = f"Did not find expected columns - {', '.join(missing_cnames)} in {file.name}" # noqa
+            if self.main_container is not None:
+                self.main_container.warning(msg)
+            else:
+                raise Exception(msg)
             # Take no further action
             return
 
