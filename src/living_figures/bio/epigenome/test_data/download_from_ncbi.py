@@ -21,7 +21,7 @@ def main(NORG):
     # For simplicity, filter to the files with clean .csv endings
     df = df.loc[df['URI'].apply(lambda s: s.endswith('.csv') and 'motif' in s)]
 
-    # For each organism with the most 
+    # For each organism with the most
     for org_name in df['Organism'].value_counts().head(NORG).index.values:
 
         # Download the available data
