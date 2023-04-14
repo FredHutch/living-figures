@@ -573,7 +573,7 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
                 colorscale=formatting["heatmap_cpal"],
                 text=text_df.values,
                 hoverinfo="text",
-                colorbar_title="Percent<br>Detection<br>of Motif"
+                colorbar_title="Fractional<br>Detection<br>of Motif"
             ),
             row=2,
             col=2
