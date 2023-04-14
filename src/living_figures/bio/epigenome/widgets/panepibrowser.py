@@ -21,6 +21,7 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
     """
 
     layout = 'wide'
+    subtitle = "Pan-Epigenome Browser"
 
     extra_imports = [
         "from typing import Tuple, Union",
@@ -295,6 +296,12 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
 
         # Give the user the option to clone this widget
         self.clone_button(sidebar=False)
+
+        # Link to the online documentation
+        docs_url = "https://living-figures.com/post/panepigenome-browser/"
+        self.sidebar_container.markdown(
+            f"[Pan-Epigenome Browser Documentation]({docs_url})"
+        )
 
     def update_annotation_selectors(self):
 
