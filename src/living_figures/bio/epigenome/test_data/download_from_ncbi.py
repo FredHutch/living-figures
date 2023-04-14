@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """Download a set of test data from NCBI."""
 
-# Number of organisms to download data for
-NORG = 5
-
 import os
 import pandas as pd
 import requests
 
+# Number of organisms to download data for
+NORG = 5
+
+
 def main(NORG):
     # Table with all of the available datasets
     df = pd.read_csv(
-        "https://ftp.ncbi.nlm.nih.gov/pub/supplementary_data/basemodification.csv"
+        "https://ftp.ncbi.nlm.nih.gov/pub/supplementary_data/basemodification.csv" # noqa
     )
 
     # Only consider the base modification summary CSVs
