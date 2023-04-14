@@ -40,27 +40,44 @@ def download_org_list(org_name, org_df):
 
     # Format the genome name
     org_df = org_df.assign(
-        genome=org_df.apply(
+        id=org_df.apply(
             lambda r: get_genome_name(r, skip=None),
             axis=1
         )
     )
 
     # Drop any duplicates
-    org_df = org_df.groupby('genome').head(1)
+    org_df = org_df.groupby('id').head(1).set_index('id')
+
+    # Keep track of which genomes were dropped
+    dropped_genomes = []
 
     # Download each genome
-    for genome, url in org_df.set_index('genome')['URI'].items():
+    for genome, url in org_df['URI'].items():
         genome_fp = os.path.join(org_folder, f"{genome}.motifs.csv")
         print(f"Downloading {genome_fp} from {url}")
         r = requests.get(url, allow_redirects=True)
         with open(genome_fp, 'wb') as handle:
             handle.write(r.content)
 
+        # Read the downloaded file
+        genome_df = pd.read_csv(genome_fp)
+
+        # If there are no rows
+        if genome_df.shape[0] == 0:
+
+            # Delete it
+            os.remove(genome_fp)
+            dropped_genomes.append(genome)
+
+            print("No rows -- dropped")
+
+    if len(dropped_genomes) > 0:
+        org_df = org_df.drop(index=dropped_genomes)
+
     # Write out the table
     org_df.to_csv(
-        f"{org_folder}/genome_annots.csv",
-        index=None
+        f"{org_folder}/genome_annots.csv"
     )
 
 

@@ -1,0 +1,7 @@
+"motifString","centerPos","modificationType","fraction","nDetected","nGenome","groupTag","partnerMotifString","meanScore","meanIpdRatio","meanCoverage","objectiveScore"
+"GATC","1","modified_base","0.99825287","41138","41210","GATC","GATC","87.45885","5.1513577","60.466286","3592224.2"
+"GCAANNNNNGGG","2","modified_base","0.99358976","620","624","GCAANNNNNGGG/CCCNNNNNTTGC","CCCNNNNNTTGC","80.79516","4.584823","64.94678","49803.91"
+"CCCNNNNNTTGC","1","modified_base","0.86378205","539","624","GCAANNNNNGGG/CCCNNNNNTTGC","GCAANNNNNGGG","50.05195","2.8719857","64.79592","23646.861"
+"GVGGTAVYD","2","modified_base","0.28831562","570","1977","GVGGTAVYD","","42.68421","5.0118074","68.217545","7943.7114"
+"DGCBKGATC","1","modified_base","0.3287037","355","1080","DGCBKGATC","","42.512676","2.3678877","64.07606","5544.609"
+"GATCBAMYR","2","modified_base","0.32047477","216","674","GATCBAMYR","","39.523148","3.6631017","67.083336","3065.63"
