@@ -23,7 +23,7 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
     layout = 'wide'
 
     extra_imports = [
-        "from typing import Tuple",
+        "from typing import Tuple, Union",
         "import pandas as pd",
         "import plotly.express as px",
         "import plotly.graph_objects as go",
