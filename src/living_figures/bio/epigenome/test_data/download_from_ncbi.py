@@ -18,7 +18,7 @@ def main(NORG):
     df = df.query("`File Type` == 'BaseModification-MotifsSummary'")
 
     # For simplicity, filter to the files with clean .csv endings
-    df = df.loc[df['URI'].apply(lambda s: s.endswith('.csv'))]
+    df = df.loc[df['URI'].apply(lambda s: s.endswith('.csv') and 'motif' in s)]
 
     # For each organism with the most 
     for org_name in df['Organism'].value_counts().head(NORG).index.values:
@@ -52,7 +52,7 @@ def download_org_list(org_name, org_df):
     # Download each genome
     for genome, url in org_df.set_index('genome')['URI'].items():
         genome_fp = os.path.join(org_folder, f"{genome}.motifs.csv")
-        print(f"Downloading {genome_fp}")
+        print(f"Downloading {genome_fp} from {url}")
         r = requests.get(url, allow_redirects=True)
         with open(genome_fp, 'wb') as handle:
             handle.write(r.content)
