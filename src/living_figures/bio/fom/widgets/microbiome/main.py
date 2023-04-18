@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from living_figures.bio.fom.widgets.microbiome import MicrobiomeAbund
 from living_figures.bio.fom.widgets.microbiome import Ordination
-from living_figures.helpers import parse_numeric
+from living_figures.helpers import parse_numeric, is_numeric
 from typing import Union
 import widgets.streamlit as wist
 from widgets.base.exceptions import WidgetFunctionException
@@ -72,13 +72,13 @@ class MicrobiomeExplorer(wist.StreamlitWidget):
         """Write to the message container."""
         self.main_container.write(msg)
 
-    def abund(self, level=None) -> pd.DataFrame():
+    def abund(self, level=None, filter='None') -> pd.DataFrame():
         """
         Return the abundance table
         """
 
         # Get the abundances
-        abund = self.get(["data", "abund"])
+        abund: pd.DataFrame = self.get(["data", "abund"])
 
         if abund.shape[0] == 0:
             return
@@ -104,6 +104,42 @@ class MicrobiomeExplorer(wist.StreamlitWidget):
             if abund.shape[0] == 0:
                 msg = f"No organisms classified at the {level} level"
                 raise WidgetFunctionException(msg)
+
+            # Rename the table for just the organism name
+            abund = abund.rename(
+                index=index_orgs['name'].get
+            )
+
+        # If a filter was specified
+        if filter is not None and filter != 'None':
+
+            # Get the sample annotations
+            sample_annots = self.sample_annotations()
+
+            # Apply the filter
+            sample_annots = sample_annots.query(filter)
+            filtered_samples = set(list(sample_annots.index.values))
+
+            # Subset the abundances to that set of samples
+            abund = abund.reindex(
+                columns=[
+                    cname for cname in abund.columns.values
+                    if cname in filtered_samples
+                ]
+            )
+
+        # Remove any samples which sum to 0
+        abund = abund.reindex(
+            columns=abund.columns.values[
+                abund.sum() > 0
+            ]
+        )
+
+        if abund.shape[1] == 0:
+            return
+
+        # Normalize all abundances to proportions
+        abund = abund / abund.sum()
 
         return abund
 
@@ -160,21 +196,86 @@ class MicrobiomeExplorer(wist.StreamlitWidget):
         # Return the data which passes this filtering regime
         return annots
 
-    def update_options(self):
-        """Update the menu selection items based on the user inputs."""
+    def sample_filters(self, max_categories=10):
+        """Return the list of possible filters based on sample metadata."""
 
-        # Get the sample annotations provided by the user
+        # Get all of the sample annotations provided by the user
         annots = self.sample_annotations()
 
-        # If none were provided
-        if annots is None:
-            # Take no action
-            return
+        # Build a list of possible filters
+        filters = ['None']
+
+        if annots is None or annots.shape[1] == 0:
+            return filters
+
+        # For each category of metadata
+        for cname, cvals in annots.items():
+
+            # Get the unique values
+            unique_vals = cvals.dropna().unique()
+
+            # Skip if there are > max_categories values
+            if unique_vals.shape[0] > max_categories:
+                continue
+
+            # Add each value to the list of filters
+            for uval in unique_vals:
+
+                # Wrap strings in quotes
+                if isinstance(uval, str):
+                    filter_val = f"'{uval}'"
+                else:
+                    filter_val = str(uval)
+
+                filters.append(
+                    f"`{cname}` == {filter_val}"
+                )
+
+        return filters
+
+    def sample_colors(self, max_categories=10):
+        """Return the list of plot colorings based on sample metadata."""
+
+        # Get all of the sample annotations provided by the user
+        annots = self.sample_annotations()
+
+        # Build a list of possible colors
+        colors = ['None']
+
+        if annots is None or annots.shape[1] == 0:
+            return colors
+
+        # For each category of metadata
+        for cname, cvals in annots.items():
+
+            # If the column is numeric
+            if is_numeric(cvals):
+
+                # Add it to the list
+                colors.append(cname)
+
+            # If it is categorical
+            else:
+
+                # Get the unique values
+                unique_vals = cvals.dropna().unique()
+
+                # If there are no more than max_categories values
+                if unique_vals.shape[0] <= max_categories:
+
+                    # Add it to the list
+                    colors.append(cname)
+
+        return colors
+
+    def update_options(self):
+        """Update the menu selection items based on the user inputs."""
 
         # Update the Ordination plots
         for ord in self._find_child("ordination"):
 
-            ord.update_options(list(annots.columns.values))
+            ord.update_options(self.sample_colors())
+            ord.update_filters(self.sample_filters())
 
     def run_self(self):
 
