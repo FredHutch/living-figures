@@ -2,3 +2,4 @@ widgets-lib>=2.6.0
 plotly
 pandas
 scipy
+scikit-learn

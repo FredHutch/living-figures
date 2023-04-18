@@ -15,9 +15,6 @@ class MicrobiomeAbund(wist.StDataFrame):
         wist.StResource(id='msg')
     ]
 
-    # def _parent_class(self):
-    #     return wist.StDataFrame
-
     def parse_files(self, uploaded_file):
 
         # Read the file
@@ -36,8 +33,6 @@ class MicrobiomeAbund(wist.StDataFrame):
 
         # Parse the index column as a taxonomic label
         self.index_orgs = self.parse_index_orgs()
-
-        self.main_container.write(list(self._parent_class_chain()))
 
     def parse_index_orgs(self):
         """

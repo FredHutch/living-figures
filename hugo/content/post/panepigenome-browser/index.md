@@ -7,7 +7,6 @@ categories:
     - Genome Comparison
 tags:
     - Epigenetics
-allow unsafe: true
 ---
 
 The incredible diversity of microbial life is not only driven by the different genes in their genomes,

@@ -17,6 +17,7 @@ def parse_tax_string(tax_str):
     final_org = tax_dat['path'][-1]
 
     if '__' not in final_org:
+        tax_dat["name"] = final_org
         return tax_dat
 
     level, name = final_org.split("__", 1)
