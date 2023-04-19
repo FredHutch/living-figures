@@ -39,6 +39,7 @@ class StPBMotif(StFile):
         label_visibility: str = "visible",
         sidebar=True,
         show_uploader=True,
+        cname_map={},
         **kwargs
     ):
         """
@@ -79,6 +80,7 @@ class StPBMotif(StFile):
             sidebar=sidebar,
             show_uploader=show_uploader,
             accept_multiple_files=True,
+            cname_map=cname_map,
             **kwargs
         )
 
