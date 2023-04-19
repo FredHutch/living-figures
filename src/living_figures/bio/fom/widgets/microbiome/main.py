@@ -67,7 +67,15 @@ class MicrobiomeExplorer(wist.StreamlitWidget):
     ]
 
     requirements = [
-        "scikit-learn"
+        "living-figures"
+    ]
+
+    extra_imports = [
+        "from living_figures.helpers import parse_numeric, is_numeric",
+        "import numpy as np",
+        "import pandas as pd",
+        "from typing import Union",
+        "from widgets.base.exceptions import WidgetFunctionException"
     ]
 
     def msg(self, msg):
@@ -119,7 +127,10 @@ class MicrobiomeExplorer(wist.StreamlitWidget):
             sample_annots = self.sample_annotations()
 
             # Apply the filter
-            sample_annots = sample_annots.query(filter)
+            query_col, query_val = filter.split(" == ", 1)
+            sample_annots = sample_annots.loc[
+                sample_annots[query_col].apply(str) == query_val
+            ]
             filtered_samples = set(list(sample_annots.index.values))
 
             # Subset the abundances to that set of samples
@@ -230,7 +241,7 @@ class MicrobiomeExplorer(wist.StreamlitWidget):
                     filter_val = str(uval)
 
                 filters.append(
-                    f"`{cname}` == {filter_val}"
+                    f"{cname} == {filter_val}"
                 )
 
         return filters

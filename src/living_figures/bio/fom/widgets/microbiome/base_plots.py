@@ -1,4 +1,5 @@
 import widgets.streamlit as wist
+from widgets.streamlit import StResource
 from widgets.base.exceptions import WidgetFunctionException
 import streamlit as st
 
@@ -6,7 +7,7 @@ import streamlit as st
 class MicrobiomePlot(wist.StResource):
     """Base class with helper functions used for microbiome plots."""
 
-    def option(self, id) -> wist.StResource:
+    def option(self, id) -> StResource:
         for r in self._find_child(id):
             return r
         raise WidgetFunctionException(f"Cannot find option {id}")

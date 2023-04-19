@@ -17,7 +17,6 @@ class AbundantOrgs(MicrobiomePlot):
     children = [
         wist.StExpander(
             id="options",
-            expanded=True,
             children=[
                 wist.StColumns(
                     id="row1",
@@ -25,8 +24,8 @@ class AbundantOrgs(MicrobiomePlot):
                         wist.StSelectString(
                             id='plot_type',
                             label="Plot Type",
-                            options=['Heatmap', 'Stacked Bars'],
-                            value='Heatmap'
+                            options=['Stacked Bars', 'Heatmap'],
+                            value='Stacked Bars'
                         ),
                         wist.StSelectString(
                             id="tax_level",
@@ -186,7 +185,7 @@ class AbundantOrgs(MicrobiomePlot):
                 msg = "No samples available with the selected annotations"
                 self.option("plot_msg").main_empty.warning(msg)
                 return
-            
+
             # Only keep the abundances which have annotations
             abund_df = abund_df.reindex(
                 columns=annot_df.index.values

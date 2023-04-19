@@ -128,7 +128,7 @@ class Ordination(MicrobiomePlot):
         msg = f"{msg} using {abund.shape[0]:,}"
         msg = f"{msg} {params['tax_level']}-level organisms"
         if params['filter_by'] is not None and params['filter_by'] != 'None':
-            msg = msg + "  \n" + f"Filtering to {params['filter_by'].replace('`', '')}"
+            msg = msg + "  \n" + f"Filtering to {params['filter_by']}"
         self._get_child("ord_msg").main_empty.write(msg)
 
         # Only compute if the cache is empty
