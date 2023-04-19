@@ -1,6 +1,7 @@
 from typing import Union
 import widgets.streamlit as wist
 from widgets.base.exceptions import WidgetFunctionException
+from living_figures.bio.fom.widgets.microbiome.base_plots import MicrobiomePlot
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -10,7 +11,7 @@ import streamlit as st
 from living_figures.helpers.constants import tax_levels
 
 
-class Ordination(wist.StResource):
+class Ordination(MicrobiomePlot):
 
     label = "Ordination (PCA/t-SNE)"
 
@@ -18,7 +19,6 @@ class Ordination(wist.StResource):
         wist.StExpander(
             id="options",
             children=[
-
                 wist.StColumns(
                     id="row1",
                     children=[
@@ -82,40 +82,6 @@ class Ordination(wist.StResource):
         wist.StResource(id="legend_display")
     ]
 
-    def option(self, id) -> wist.StResource:
-        for r in self._find_child(id):
-            return r
-        raise WidgetFunctionException(f"Cannot find option {id}")
-
-    def update_options(self, options):
-        """Update the set of options for user-provided metadata."""
-
-        # If this element is disabled
-        if self.main_container is None:
-            return
-
-        # Color Samples By
-        color_by = self.option("color_by")
-        if color_by.get_attr("options") != options:
-            color_by.set(attr="options", value=options)
-
-        # Regenerate the plot
-        self.run_self()
-
-    def update_filters(self, filters: list):
-
-        # If this element is disabled
-        if self.main_container is None:
-            return
-
-        # Color Samples By
-        filter_by = self.option("filter_by")
-        if filter_by.get_attr("options") != filters:
-            filter_by.set(attr="options", value=filters)
-
-        # Regenerate the plot
-        self.run_self()
-
     def make_cache_key(self, val_str: str):
         """Return a cache for the ordination object(s)."""
 
@@ -145,7 +111,7 @@ class Ordination(wist.StResource):
 
         # Get the abundances, filtering to the specified taxonomic level
         # Columns are samples, rows are organisms
-        abund = self._root().abund(
+        abund: pd.DataFrame = self._root().abund(
             level=params['tax_level'],
             filter=params['filter_by']
         )
@@ -180,12 +146,6 @@ class Ordination(wist.StResource):
             self.set_cache(self.make_cache_key("loadings"), loadings)
 
         return self.get_cache(cache_key)
-
-    def set_cache(self, cache_key, value) -> None:
-        st.session_state["ordination_cache"][cache_key] = value
-
-    def get_cache(self, cache_key):
-        return st.session_state["ordination_cache"].get(cache_key)
 
     def run_pca(self, abund: pd.DataFrame):
         """Ordinate data using PCA"""

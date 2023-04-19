@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from living_figures.bio.fom.widgets.microbiome import MicrobiomeAbund
 from living_figures.bio.fom.widgets.microbiome import Ordination
+from living_figures.bio.fom.widgets.microbiome import AbundantOrgs
 from living_figures.helpers import parse_numeric, is_numeric
 from typing import Union
 import widgets.streamlit as wist
@@ -55,6 +56,7 @@ class MicrobiomeExplorer(wist.StreamlitWidget):
                     id=f"plot_{i}",
                     disable_sidebar=True,
                     options=[
+                        AbundantOrgs(id="abundant_orgs"),
                         Ordination(id="ordination")
                     ]
                 ))
@@ -233,14 +235,14 @@ class MicrobiomeExplorer(wist.StreamlitWidget):
 
         return filters
 
-    def sample_colors(self, max_categories=10):
+    def sample_colors(self, max_categories=10, include_none=True):
         """Return the list of plot colorings based on sample metadata."""
 
         # Get all of the sample annotations provided by the user
         annots = self.sample_annotations()
 
         # Build a list of possible colors
-        colors = ['None']
+        colors = ['None'] if include_none else []
 
         if annots is None or annots.shape[1] == 0:
             return colors
@@ -271,11 +273,18 @@ class MicrobiomeExplorer(wist.StreamlitWidget):
     def update_options(self):
         """Update the menu selection items based on the user inputs."""
 
-        # Update the Ordination plots
-        for ord in self._find_child("ordination"):
+        # Update the Ordination and Abundant Organism plots
+        for plot_type in ["ordination", "abundant_orgs"]:
 
-            ord.update_options(self.sample_colors())
-            ord.update_filters(self.sample_filters())
+            # For each of the elements of this type
+            for plot_elem in self._find_child(plot_type):
+
+                # Update the 'color_by' and 'filter_by' menu options
+                plot_elem.update_options(
+                    self.sample_colors(include_none=plot_type == "ordination"),
+                    "color_by"
+                )
+                plot_elem.update_options(self.sample_filters(), "filter_by")
 
     def run_self(self):
 
