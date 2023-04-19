@@ -39,6 +39,20 @@ class StPBMotif(StFile):
         label_visibility: str = "visible",
         sidebar=True,
         show_uploader=True,
+        cname_map={
+            "Motif": "motifString",
+            "Modified Position": "centerPos",
+            "Motification Type": "modificationType",
+            "% of Motifs Detected": "fraction",
+            "# of Motifs Detected": "nDetected",
+            "# of Motifs in Genome": "nGenome",
+            "Mean QV": "meanScore",
+            "Mean Coverage": "meanCoverage",
+            "Partner Motif": "partnerMotifString",
+            "Mean IPD ratio": "meanIpdRatio",
+            "Group Tag": "groupTag",
+            "Objective Score": "objectiveScore"
+        },
         **kwargs
     ):
         """
@@ -79,6 +93,7 @@ class StPBMotif(StFile):
             sidebar=sidebar,
             show_uploader=show_uploader,
             accept_multiple_files=True,
+            cname_map=cname_map,
             **kwargs
         )
 
