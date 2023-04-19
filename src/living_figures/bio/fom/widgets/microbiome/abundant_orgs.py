@@ -1,13 +1,13 @@
-from typing import Union
+from living_figures.bio.fom.widgets.microbiome.base_plots import MicrobiomePlot
+from living_figures.helpers.constants import tax_levels
+from living_figures.helpers.parse_numeric import is_numeric
+from living_figures.helpers.scaling import convert_text_to_scalar
 from living_figures.helpers.sorting import sort_table
 import widgets.streamlit as wist
-from living_figures.bio.fom.widgets.microbiome.base_plots import MicrobiomePlot
-from widgets.base.exceptions import WidgetFunctionException
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-import streamlit as st
-from living_figures.helpers.constants import tax_levels
+from plotly.subplots import make_subplots
 
 
 class AbundantOrgs(MicrobiomePlot):
@@ -77,6 +77,42 @@ class AbundantOrgs(MicrobiomePlot):
                 wist.StColumns(
                     id="row4",
                     children=[
+                        wist.StSelectString(
+                            id="heatmap_cpal",
+                            label="Heatmap Color Palette",
+                            options=px.colors.named_colorscales(),
+                            value="blues"
+                        ),
+                        wist.StSelectString(
+                            id="annot_cpal",
+                            label="Annotation Color Palette",
+                            options=px.colors.named_colorscales(),
+                            value="bluered"
+                        )
+                    ]
+                ),
+                wist.StColumns(
+                    id="row5",
+                    children=[
+                        wist.StFloat(
+                            id="annot_size",
+                            label="Annotation Size",
+                            value=0.05,
+                            min=0.
+                        ),
+                        wist.StInteger(
+                            label="Figure Height",
+                            id="figure_height",
+                            min_value=100,
+                            max_value=1200,
+                            step=1,
+                            value=600
+                        )
+                    ]
+                ),
+                wist.StColumns(
+                    id="row6",
+                    children=[
                         wist.StString(id='title'),
                         wist.StTextArea(id='legend')
                     ]
@@ -133,39 +169,146 @@ class AbundantOrgs(MicrobiomePlot):
         # Get the metadata (if any was provided)
         sample_annots: pd.DataFrame = self._root().sample_annotations()
 
-        # Get the coloring column
-        color_by = self.option("color_by").get_value()
+        # Get all of the parameters used for plotting
+        params = self.all_values(flatten=True)
 
         # If there is metadata and the user wants to display it
-        if len(color_by) > 0 and sample_annots is not None:
+        if len(params['color_by']) > 0 and sample_annots is not None:
 
             annot_df = sample_annots.reindex(
-                columns=color_by,
+                columns=params['color_by'],
                 index=abund_df.columns.values
+            ).dropna()
+
+            # If there are no samples with the selected metadata
+            if annot_df.shape[0] == 0:
+
+                msg = "No samples available with the selected annotations"
+                self.option("plot_msg").main_empty.warning(msg)
+                return
+            
+            # Only keep the abundances which have annotations
+            abund_df = abund_df.reindex(
+                columns=annot_df.index.values
             )
 
         else:
             annot_df = None
 
         # If the user requested to sort samples by organism abundances
-        sort_by = self.option("sort_by").get_value()
-        if sort_by == "Organism Abundances":
+        if params['sort_by'] == "Organism Abundances":
 
             # Sort the abundance table
             abund_df = sort_table(abund_df)
 
-            # Order the annotations to match
-            if annot_df is not None:
-                annot_df = annot_df.reindex(index=abund_df.columns.values)
-
         # If the user requested to sort samples by annotations
-        elif sort_by == "Selected Metadata" and annot_df is not None:
+        elif params['sort_by'] == "Selected Metadata" and annot_df is not None:
 
             # Sort the annotation table
-            annot_df = annot_df.dropna().sort_values(by=annot_df.columns.values)
+            annot_df = annot_df.sort_values(
+                by=list(annot_df.columns.values)
+            )
 
             # Order the abundances to match
             abund_df = abund_df.reindex(columns=annot_df.index.values)
 
-        self.option("plot").main_empty.write(abund_df)
-        self.option("plot").main_empty.write(annot_df)
+        # Order the annotations to match the abundances
+        if annot_df is not None:
+            annot_df = annot_df.reindex(index=abund_df.columns.values)
+
+        # Set up the size of the annotations
+        annot_frac = min(
+            0.5,
+            0.02 + (params["annot_size"] * float(len(params["color_by"])))
+        )
+        row_heights = [1 - annot_frac, annot_frac]
+
+        # Set up the plot area
+        fig = make_subplots(
+            rows=1 if annot_df is None else 2,
+            cols=1,
+            vertical_spacing=0.01,
+            horizontal_spacing=0.01,
+            start_cell="top-left",
+            row_heights=None if annot_df is None else row_heights,
+            shared_xaxes=True
+        )
+
+        # Plot the heatmap / stacked bars
+        fig.add_traces(self.plot_abund(abund_df), rows=1, cols=1)
+
+        if params["plot_type"] == "Stacked Bars":
+            fig.update_layout(barmode='stack')
+
+        # Plot the annotations
+        if len(params['color_by']) > 0 and sample_annots is not None:
+            fig.add_trace(self.plot_annot(annot_df), row=2, col=1)
+
+        plot_area = self._get_child("plot")
+        plot_area.main_empty.plotly_chart(
+            fig,
+            use_container_width=True
+        )
+
+    def plot_abund(self, abund_df):
+
+        if self.option("plot_type").get_value() == "Heatmap":
+            return self.plot_heatmap(abund_df)
+        else:
+            return self.plot_bars(abund_df)
+
+    def plot_heatmap(self, abund_df):
+        return [
+            go.Heatmap(
+                x=abund_df.columns.values,
+                y=abund_df.index.values,
+                z=abund_df.values,
+                # colorscale=formatting["heatmap_cpal"],
+                # text=text_df.values,
+                # hoverinfo="text",
+                colorbar_title="Proportional<br>Abundance"
+            )
+        ]
+
+    def plot_bars(self, abund_df):
+
+        return [
+            go.Bar(
+                name=org_name,
+                x=org_abund.index.values,
+                y=org_abund.values,
+                hovertext=[
+                    f"{sample}<br>{org_name}: {round(abund * 100., 2)}%"
+                    for sample, abund in org_abund.items()
+                ]
+            )
+            for org_name, org_abund in abund_df.iterrows()
+        ]
+
+    def plot_annot(self, annot_df):
+
+        # Capture the annotations as text
+        text_df = annot_df.applymap(
+            lambda i: "" if i is None else str(i)
+        ).apply(
+            lambda c: c.apply(
+                lambda i: f"{c.name}: {i}"
+            )
+        )
+
+        # For any text columns, scale to a number
+        for cname in annot_df:
+            if not is_numeric(annot_df[cname]):
+                annot_df = annot_df.assign(**{
+                    cname: convert_text_to_scalar(annot_df[cname])
+                })
+
+        return go.Heatmap(
+            x=annot_df.index.values,
+            y=annot_df.columns.values,
+            z=annot_df.T.values,
+            colorscale=self.option("annot_cpal").get_value(),
+            text=text_df.T.values,
+            hoverinfo="text",
+            showscale=False,
+        )
