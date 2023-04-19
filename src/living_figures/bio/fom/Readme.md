@@ -27,31 +27,10 @@ the label which is assigned to each metadata attribute.
 
 ## Utilities
 
-In the `utilities/` subfolder:
-
-### FOM Selector
-
-To encompass all of the different types of widgets which can be used
-to manipulate FOM data, we will create a selector object which is
-able to select which of the different widgets is displayed driven by
-dropdown menu selection.
-
-### FOM Replicator
-
-To give the user the ability to chain multiple FOM widgets in a
-row, we will use a Replicator object to expand/contract a list
-of FOM Selector sub-widgets.
+In the `utilities/` subfolder, objects which are useful across multiple
+different types of FOM data.
 
 ## Widgets
 
 In the `widgets/` subfolder is a collection of widgets which use
 FOM data in some way.
-
-### Shared Resource Usage
-
-To allow the FOM Widgets to process the same set of data without
-duplicating it, there is a shared set of resource naming convention
-which is used to access those resources.
-
-Each of these widgets will look for these Resources as part of
-their parent ResourceList.
