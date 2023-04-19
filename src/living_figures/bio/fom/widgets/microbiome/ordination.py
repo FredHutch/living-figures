@@ -292,7 +292,9 @@ class Ordination(wist.StResource):
         # If there is a legend
         legend = self.option("legend").get_value()
         if legend is not None:
-            self._get_child("legend_display").main_empty.markdown(legend)
+            self._get_child(
+                "legend_display"
+            ).main_empty.markdown(legend)
 
     def add_pca_loadings(self, fig):
 
