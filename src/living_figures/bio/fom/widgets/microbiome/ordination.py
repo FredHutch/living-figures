@@ -239,7 +239,7 @@ class Ordination(MicrobiomePlot):
         fig = plot_f(**plot_kwargs)
 
         # Add the PCA loadings, if requested
-        self.add_pca_loadings(fig)
+        self.add_pca_loadings(fig, plot_df)
 
         # If there is a title
         title = self.option("title").get_value()
@@ -256,7 +256,7 @@ class Ordination(MicrobiomePlot):
                 "legend_display"
             ).main_empty.markdown(legend)
 
-    def add_pca_loadings(self, fig):
+    def add_pca_loadings(self, fig, plot_df):
 
         if not self.option("pca_loadings").get_value():
             return
@@ -290,6 +290,13 @@ class Ordination(MicrobiomePlot):
                 org_score >= cutoff_score
             ]
         )
+
+        # Scale each loading to fit nicely on the plot
+        loadings = (
+            plot_df.reindex(
+                columns=loadings.index.values
+            ).abs().max() * loadings.T / loadings.T.abs().max()
+        ).T
 
         for org_name, org_coords in loadings.items():
 
