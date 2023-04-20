@@ -8,7 +8,10 @@ def convert_text_to_scalar(c: pd.Series):
     unique_values = c.dropna().drop_duplicates().sort_values()
 
     # Assign each value to an index position
-    value_map = pd.Series(dict(zip(unique_values, range(len(unique_values)))))
+    value_map = pd.Series(
+        dict(zip(unique_values, range(len(unique_values)))),
+        dtype=float
+    )
 
     # Set the maximum value at 1
     value_map = value_map / value_map.max()
