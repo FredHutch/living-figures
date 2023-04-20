@@ -151,8 +151,8 @@ class MicrobiomeExplorer(wist.StreamlitWidget):
         if abund.shape[1] == 0:
             return
 
-        # Normalize all abundances to proportions
-        abund = abund / abund.sum()
+        # Normalize all abundances to percentages
+        abund = 100 * abund / abund.sum()
 
         return abund
 
