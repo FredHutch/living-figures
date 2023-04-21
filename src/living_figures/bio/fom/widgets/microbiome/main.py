@@ -2,6 +2,7 @@ from copy import deepcopy
 import numpy as np
 import pandas as pd
 from living_figures.bio.fom.widgets.microbiome import MicrobiomeAbund
+from living_figures.bio.fom.widgets.microbiome import StHashedDataFrame
 from living_figures.bio.fom.widgets.microbiome import Ordination
 from living_figures.bio.fom.widgets.microbiome import AbundantOrgs
 from living_figures.helpers import parse_numeric, is_numeric
@@ -38,10 +39,9 @@ class MicrobiomeExplorer(wist.StreamlitWidget):
             expanded=True,
             children=[
                 MicrobiomeAbund(id="abund"),
-                wist.StDataFrame(
+                StHashedDataFrame(
                     id="annots",
-                    label="Sample Annotations",
-                    kwargs=dict(index_col=0)
+                    label="Sample Annotations"
                 ),
                 wist.StDownloadDataFrame(
                     target="annots",
@@ -162,6 +162,13 @@ class MicrobiomeExplorer(wist.StreamlitWidget):
         """
 
         return self.get(["data", "abund"], attr="hash")
+
+    def annot_hash(self) -> pd.DataFrame():
+        """
+        Return the hash of the annotation table
+        """
+
+        return self.get(["data", "annots"], attr="hash")
 
     def sample_annotations(self) -> Union[None, pd.DataFrame]:
         """Return the table of sample annotations."""

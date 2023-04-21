@@ -123,6 +123,25 @@ class AbundantOrgs(MicrobiomePlot):
         wist.StResource(id="legend_display")
     ]
 
+    def make_cache_key(self):
+        """Return a cache key for the plot data."""
+
+        # Get the hash of the input data
+        abund_hash: str = self._root().abund_hash()
+        annot_hash: str = self._root().annot_hash()
+
+        # Set the cache key based on the input data and analysis details
+        cache_key = ":".join([
+            abund_hash,
+            annot_hash,
+            self.option('tax_level').get_value(),
+            str(self.option('n_orgs').get_value()),
+            str(self.option('sort_by').get_value()),
+            str(self.option('color_by').get_value())
+        ])
+
+        return cache_key
+
     def get_abundance_data(self):
 
         # Get the plotting options
@@ -157,13 +176,24 @@ class AbundantOrgs(MicrobiomePlot):
         ])
 
         return abund
+    def get_plotting_data(self):
+        """Return the data used for plotting, using the cache when possible."""
 
-    def run_self(self):
+        # If the cache is populated
+        if self.get_cache(self.make_cache_key()) is not None:
+            # Return the cached data
+            return self.get_cache(self.make_cache_key())
+        
+        # If the cache is not populated
 
         # Get the abundance data to plot
         abund_df = self.get_abundance_data()
+
+        # If there is no abundance data
         if abund_df is None:
-            return
+            # Note the lack of data in the cache
+            self.set_cache(self.make_cache_key(), (None, None))
+            return None, None
 
         # Get the metadata (if any was provided)
         sample_annots: pd.DataFrame = self._root().sample_annotations()
@@ -184,7 +214,8 @@ class AbundantOrgs(MicrobiomePlot):
 
                 msg = "No samples available with the selected annotations"
                 self.option("plot_msg").main_empty.warning(msg)
-                return
+                self.set_cache(self.make_cache_key(), (None, None))
+                return None, None
 
             # Only keep the abundances which have annotations
             abund_df = abund_df.reindex(
@@ -215,6 +246,22 @@ class AbundantOrgs(MicrobiomePlot):
         if annot_df is not None:
             annot_df = annot_df.reindex(index=abund_df.columns.values)
 
+        self.set_cache(self.make_cache_key(), (abund_df, annot_df))
+        return abund_df, annot_df
+
+    def run_self(self):
+
+        # Get the plotting data
+        abund_df, annot_df = self.get_plotting_data()
+
+        # If there is no data
+        if abund_df is None:
+            # Don't make a plot
+            return
+
+        # Get all of the parameters used for plotting
+        params = self.all_values(flatten=True)
+
         # Set up the size of the annotations
         annot_frac = min(
             0.5,
@@ -243,7 +290,7 @@ class AbundantOrgs(MicrobiomePlot):
             )
 
         # Plot the annotations
-        if len(params['color_by']) > 0 and sample_annots is not None:
+        if len(params['color_by']) > 0 and annot_df is not None:
             fig.add_trace(self.plot_annot(annot_df), row=2, col=1)
 
         # If there is a title

@@ -43,3 +43,22 @@ class MicrobiomeAbund(wist.StDataFrame):
             parse_tax_string(org_str)
             for org_str in self.value.index.values
         ], index=self.value.index)
+
+
+class StHashedDataFrame(wist.StDataFrame):
+    """Read in a DataFrame and compute a hash."""
+
+    hash = None
+
+    def parse_files(self, uploaded_file):
+
+        # Read the file
+        self.value: pd.DataFrame = pd.read_csv(
+            uploaded_file,
+            index_col=0,
+            sep="\t" if "tsv" in uploaded_file.name else ",",
+            compression="gzip" if uploaded_file.name.endswith(".gz") else None
+        )
+
+        # Compute the hash of the data
+        self.hash = md5(self.value.to_csv().encode()).hexdigest()

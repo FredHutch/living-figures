@@ -83,31 +83,45 @@ class Ordination(MicrobiomePlot):
     ]
 
     def make_cache_key(self, val_str: str):
-        """Return a cache for the ordination object(s)."""
+        """Return a cache key for the plot data."""
 
         # Get the hash of the input data
-        abund_hash = self._root().abund_hash()
-
-        # Get the plotting options
-        params = self.all_values(flatten=True)
+        abund_hash: str = self._root().abund_hash()
 
         # Set the cache key based on the input data and analysis details
-        cache_key = f"{abund_hash}:{params['tax_level']}:{params['ord_type']}:{2 + params['3D']}D:{params['filter_by']}:{val_str}" # noqa
+        cache_key = ":".join([
+            abund_hash,
+            self.option('tax_level').get_value(),
+            self.option('ord_type').get_value(),
+            str(self.option('3D').get_value()),
+            str(self.option('filter_by').get_value()),
+            val_str
+        ])
 
         return cache_key
 
     def run_ordination(self) -> Union[None, pd.DataFrame]:
         """Perform ordination on the abundance data."""
 
-        # Set up the cache
-        if st.session_state.get("ordination_cache") is None:
-            st.session_state["ordination_cache"] = dict()
+        # Get the cache key
+        cache_key = self.make_cache_key("projection")
+
+        # If a value has been computed
+        if self.get_cache(cache_key) is not None:
+
+            # Get the value
+            proj = self.get_cache(cache_key)
+
+            # Return the value
+            if proj == "None":
+                return
+            else:
+                return proj
+            
+        # The projection needs to be computed
 
         # Get the plotting options
         params = self.all_values(flatten=True)
-
-        # Get the cache key
-        cache_key = self.make_cache_key("projection")
 
         # Get the abundances, filtering to the specified taxonomic level
         # Columns are samples, rows are organisms
@@ -122,6 +136,7 @@ class Ordination(MicrobiomePlot):
             # Stop
             msg = "No abundances available for ordination"
             self._get_child("ord_msg").main_empty.write(msg)
+            self.set_cache(cache_key, "None")
             return
 
         msg = f"Running {params['ord_type']} on {abund.shape[1]:,} samples"
@@ -131,19 +146,16 @@ class Ordination(MicrobiomePlot):
             msg = msg + "  \n" + f"Filtering to {params['filter_by']}"
         self._get_child("ord_msg").main_empty.write(msg)
 
-        # Only compute if the cache is empty
-        if self.get_cache(cache_key) is None:
+        if params['ord_type'] == 'PCA':
+            proj, loadings = self.run_pca(abund)
+        elif params['ord_type'] == 't-SNE':
+            proj, loadings = self.run_tsne(abund)
+        else:
+            msg = "Ordination type not recognized"
+            raise WidgetFunctionException(msg)
 
-            if params['ord_type'] == 'PCA':
-                proj, loadings = self.run_pca(abund)
-            elif params['ord_type'] == 't-SNE':
-                proj, loadings = self.run_tsne(abund)
-            else:
-                msg = "Ordination type not recognized"
-                raise WidgetFunctionException(msg)
-
-            self.set_cache(cache_key, proj)
-            self.set_cache(self.make_cache_key("loadings"), loadings)
+        self.set_cache(cache_key, proj)
+        self.set_cache(self.make_cache_key("loadings"), loadings)
 
         return self.get_cache(cache_key)
 
@@ -262,10 +274,18 @@ class Ordination(MicrobiomePlot):
             return
 
         # Get the key used in the cache for the loadings
-        loadings = self.get_cache(
-            self.make_cache_key("loadings")
-        )
+        cache_key = self.make_cache_key("loadings")
 
+        # If there is no value in the cache
+        if self.get_cache(cache_key) is None:
+            # Run the ordination to make sure that the cache
+            # is current
+            _ = self.run_ordination()
+
+        # Get any value in the cache
+        loadings = self.get_cache(cache_key)
+
+        # If no value has been computed
         if loadings is None:
             return
 

@@ -33,8 +33,17 @@ class MicrobiomePlot(wist.StResource):
         if self.main_container is not None:
             self.run_self()
 
+    def setup_cache(self) -> None:
+        if st.session_state.get(f"{self.id}_cache") is None:
+            st.session_state[f"{self.id}_cache"] = {}
+
     def set_cache(self, cache_key, value) -> None:
+        self.setup_cache()
         st.session_state[f"{self.id}_cache"][cache_key] = value
 
     def get_cache(self, cache_key):
+        self.setup_cache()
         return st.session_state[f"{self.id}_cache"].get(cache_key)
+
+    def _get_child(self, child_id, *cont) -> 'StResource':
+        return super()._get_child(child_id, *cont)
