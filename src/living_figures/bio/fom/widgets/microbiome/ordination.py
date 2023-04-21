@@ -91,10 +91,10 @@ class Ordination(MicrobiomePlot):
         # Set the cache key based on the input data and analysis details
         cache_key = ":".join([
             abund_hash,
-            self.option('tax_level').get_value(),
-            self.option('ord_type').get_value(),
-            str(self.option('3D').get_value()),
-            str(self.option('filter_by').get_value()),
+            self.val('tax_level'),
+            self.val('ord_type'),
+            str(self.val('3D')),
+            str(self.val('filter_by')),
             val_str
         ])
 
@@ -194,7 +194,7 @@ class Ordination(MicrobiomePlot):
         """Ordinate data using t-SNE"""
 
         tsne = TSNE(
-            n_components=3 if self.option("3D").get_value() else 2
+            n_components=3 if self.val("3D") else 2
         )
         ord_mat = tsne.fit_transform(abund.T)
         coords = pd.DataFrame(
@@ -228,7 +228,7 @@ class Ordination(MicrobiomePlot):
             )
 
         # Get the coloring column
-        color_by = self.option("color_by").get_value()
+        color_by = self.val("color_by")
         if color_by == 'None':
             color_by = None
 
@@ -241,7 +241,7 @@ class Ordination(MicrobiomePlot):
         )
 
         # If the 3D plot was requested
-        if self.option("3D").get_value():
+        if self.val("3D"):
             plot_f = px.scatter_3d
             plot_kwargs['z'] = plot_df.columns.values[2]
         else:
@@ -254,7 +254,7 @@ class Ordination(MicrobiomePlot):
         self.add_pca_loadings(fig, plot_df)
 
         # If there is a title
-        title = self.option("title").get_value()
+        title = self.val("title")
         if title is not None and title != "None":
             fig.update_layout(title=title)
 
@@ -262,7 +262,7 @@ class Ordination(MicrobiomePlot):
         self._get_child("plot").main_empty.plotly_chart(fig)
 
         # If there is a legend
-        legend = self.option("legend").get_value()
+        legend = self.val("legend")
         if legend is not None:
             self._get_child(
                 "legend_display"
@@ -270,7 +270,7 @@ class Ordination(MicrobiomePlot):
 
     def add_pca_loadings(self, fig, plot_df):
 
-        if not self.option("pca_loadings").get_value():
+        if not self.val("pca_loadings"):
             return
 
         # Get the key used in the cache for the loadings
@@ -290,7 +290,7 @@ class Ordination(MicrobiomePlot):
             return
 
         # Number of dimensions
-        ndims = 2 + self.option("3D").get_value()
+        ndims = 2 + self.val("3D")
 
         # Just pick the number of axes used in the plot
         loadings = loadings.head(ndims)
@@ -326,7 +326,7 @@ class Ordination(MicrobiomePlot):
                 mode='lines',
                 name=org_name
             )
-            if self.option("3D").get_value():
+            if self.val("3D"):
                 line_props['z'] = [0, org_coords.values[2]]
                 trace_f = go.Scatter3d
             else:

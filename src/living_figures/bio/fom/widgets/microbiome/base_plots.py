@@ -1,3 +1,4 @@
+from typing import Any
 import widgets.streamlit as wist
 from widgets.streamlit import StResource
 from widgets.base.exceptions import WidgetFunctionException
@@ -11,6 +12,9 @@ class MicrobiomePlot(wist.StResource):
         for r in self._find_child(id):
             return r
         raise WidgetFunctionException(f"Cannot find option {id}")
+
+    def val(self, id) -> Any:
+        return self.val(id)
 
     def update_options(self, options, id):
         """Update the set of options for user-provided metadata."""
