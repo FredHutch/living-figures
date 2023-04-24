@@ -29,7 +29,6 @@ class MicrobiomeExplorer(BaseMicrobiomeExplorer):
 
     id = "microbiome-explorer"
     subtitle = "Microbiome Explorer"
-    ga_tag = "G-W4MS673SJ1"
 
     children = [
 

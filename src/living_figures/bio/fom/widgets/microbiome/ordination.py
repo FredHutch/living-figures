@@ -139,7 +139,6 @@ class Ordination(MicrobiomePlot):
             # Stop
             msg = "No abundances available for ordination"
             self._get_child("ord_msg").main_empty.write(msg)
-            self.set_cache(cache_key, "None")
             return
 
         msg = f"Running {params['ord_type']} on {abund.shape[1]:,} samples"

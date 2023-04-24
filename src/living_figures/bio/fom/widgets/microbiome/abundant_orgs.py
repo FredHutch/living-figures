@@ -123,28 +123,6 @@ class AbundantOrgs(MicrobiomePlot):
         wist.StResource(id="legend_display")
     ]
 
-    def make_cache_key(self):
-        """Return a cache key for the plot data."""
-
-        # Get the hash of the input data
-        abund_hash: str = self._root().abund_hash()
-        annot_hash: str = self._root().annot_hash()
-
-        # Set the cache key based on the input data and analysis details
-        cache_key = ":".join(map(
-            str,
-            [
-                abund_hash,
-                annot_hash,
-                self.val('tax_level'),
-                self.val('n_orgs'),
-                self.val('sort_by'),
-                self.val('color_by')
-            ]
-        ))
-
-        return cache_key
-
     def get_abundance_data(self):
 
         # Get the plotting options
