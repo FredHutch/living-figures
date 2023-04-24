@@ -38,8 +38,11 @@ jobs:
           python -m build
           python -m build --wheel
 
-      - name: Upload scikit-bio
-        uses: actions/upload-artifact@v3
+      - name: Upload scikit-bio wheel
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         with:
-          name: scikit-bio.whl
-          path: ext/scikit-bio/build/*.whl
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ext/scikit-bio/dist/*.whl
+          asset_name: scikit_bio-0.5.8.whl
