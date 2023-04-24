@@ -1,0 +1,50 @@
+name: Build external wheels
+
+on:
+  release:
+    types:
+      - published
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-push-wheels:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+
+      - name: Setup python build
+        run: |
+          python -m pip install build
+
+      - name: Build scikit-bio
+        working-directory: ext/scikit-bio
+        run: |
+          python -m build
+          python -m build --wheel
+
+      - name: Upload scikit-bio wheel
+        if: github.event_name == 'release'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ext/scikit-bio/dist/*.whl
+          asset_name: scikit_bio-0.5.8.whl
+          asset_content_type: application/zip

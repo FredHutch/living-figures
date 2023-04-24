@@ -158,12 +158,24 @@ class AbundantOrgs(MicrobiomePlot):
 
         return abund
 
-    def run_self(self):
+    def get_plotting_data(self):
+        """Return the data used for plotting, using the cache when possible."""
+
+        # If the cache is populated
+        if self.get_cache(self.make_cache_key()) is not None:
+            # Return the cached data
+            return self.get_cache(self.make_cache_key())
+
+        # If the cache is not populated
 
         # Get the abundance data to plot
         abund_df = self.get_abundance_data()
+
+        # If there is no abundance data
         if abund_df is None:
-            return
+            # Note the lack of data in the cache
+            self.set_cache(self.make_cache_key(), (None, None))
+            return None, None
 
         # Get the metadata (if any was provided)
         sample_annots: pd.DataFrame = self._root().sample_annotations()
@@ -184,7 +196,8 @@ class AbundantOrgs(MicrobiomePlot):
 
                 msg = "No samples available with the selected annotations"
                 self.option("plot_msg").main_empty.warning(msg)
-                return
+                self.set_cache(self.make_cache_key(), (None, None))
+                return None, None
 
             # Only keep the abundances which have annotations
             abund_df = abund_df.reindex(
@@ -215,6 +228,22 @@ class AbundantOrgs(MicrobiomePlot):
         if annot_df is not None:
             annot_df = annot_df.reindex(index=abund_df.columns.values)
 
+        self.set_cache(self.make_cache_key(), (abund_df, annot_df))
+        return abund_df, annot_df
+
+    def run_self(self):
+
+        # Get the plotting data
+        abund_df, annot_df = self.get_plotting_data()
+
+        # If there is no data
+        if abund_df is None:
+            # Don't make a plot
+            return
+
+        # Get all of the parameters used for plotting
+        params = self.all_values(flatten=True)
+
         # Set up the size of the annotations
         annot_frac = min(
             0.5,
@@ -237,11 +266,18 @@ class AbundantOrgs(MicrobiomePlot):
         fig.add_traces(self.plot_abund(abund_df), rows=1, cols=1)
 
         if params["plot_type"] == "Stacked Bars":
-            fig.update_layout(barmode='stack')
+            fig.update_layout(
+                barmode='stack',
+                yaxis_title="Relative Abundance (%)"
+            )
 
         # Plot the annotations
-        if len(params['color_by']) > 0 and sample_annots is not None:
+        if len(params['color_by']) > 0 and annot_df is not None:
             fig.add_trace(self.plot_annot(annot_df), row=2, col=1)
+
+        # If there is a title
+        if params['title'] is not None and params['title'] != "None":
+            fig.update_layout(title=params['title'])
 
         plot_area = self._get_child("plot")
         plot_area.main_empty.plotly_chart(
@@ -249,23 +285,43 @@ class AbundantOrgs(MicrobiomePlot):
             use_container_width=True
         )
 
+        # If there is a legend
+        if params['legend'] is not None:
+            self._get_child(
+                "legend_display"
+            ).main_empty.markdown(
+                params['legend']
+            )
+
     def plot_abund(self, abund_df):
 
-        if self.option("plot_type").get_value() == "Heatmap":
+        if self.val("plot_type") == "Heatmap":
             return self.plot_heatmap(abund_df)
         else:
             return self.plot_bars(abund_df)
 
-    def plot_heatmap(self, abund_df):
+    def plot_heatmap(self, abund_df: pd.DataFrame):
+
+        # Color scale used for the heatmap
+        colorscale = self.val("heatmap_cpal")
+
+        # Mouseover text
+        text_df = abund_df.apply(
+            lambda c: [
+                f"Sample: {c.name}<br>Organism: {n}<br>Abundance: {a:.4g}%"
+                for n, a in c.items()
+            ]
+        )
+
         return [
             go.Heatmap(
                 x=abund_df.columns.values,
                 y=abund_df.index.values,
                 z=abund_df.values,
-                # colorscale=formatting["heatmap_cpal"],
-                # text=text_df.values,
-                # hoverinfo="text",
-                colorbar_title="Proportional<br>Abundance"
+                colorscale=colorscale,
+                text=text_df.values,
+                hoverinfo="text",
+                colorbar_title="Relative<br>Abundance<br>(%)"
             )
         ]
 
@@ -277,7 +333,7 @@ class AbundantOrgs(MicrobiomePlot):
                 x=org_abund.index.values,
                 y=org_abund.values,
                 hovertext=[
-                    f"{sample}<br>{org_name}: {round(abund * 100., 2)}%"
+                    f"{sample}<br>{org_name}: {abund:.4g}%"
                     for sample, abund in org_abund.items()
                 ]
             )

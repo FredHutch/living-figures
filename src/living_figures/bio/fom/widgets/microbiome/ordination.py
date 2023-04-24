@@ -7,7 +7,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
-import streamlit as st
 from living_figures.helpers.constants import tax_levels
 
 
@@ -83,31 +82,48 @@ class Ordination(MicrobiomePlot):
     ]
 
     def make_cache_key(self, val_str: str):
-        """Return a cache for the ordination object(s)."""
+        """Return a cache key for the plot data."""
 
         # Get the hash of the input data
-        abund_hash = self._root().abund_hash()
-
-        # Get the plotting options
-        params = self.all_values(flatten=True)
+        abund_hash: str = self._root().abund_hash()
 
         # Set the cache key based on the input data and analysis details
-        cache_key = f"{abund_hash}:{params['tax_level']}:{params['ord_type']}:{2 + params['3D']}D:{params['filter_by']}:{val_str}" # noqa
+        cache_key = ":".join(map(
+            str,
+            [
+                abund_hash,
+                self.val('tax_level'),
+                self.val('ord_type'),
+                self.val('3D'),
+                self.val('filter_by'),
+                val_str
+            ]
+        ))
 
         return cache_key
 
     def run_ordination(self) -> Union[None, pd.DataFrame]:
         """Perform ordination on the abundance data."""
 
-        # Set up the cache
-        if st.session_state.get("ordination_cache") is None:
-            st.session_state["ordination_cache"] = dict()
+        # Get the cache key
+        cache_key = self.make_cache_key("projection")
+
+        # If a value has been computed
+        if self.get_cache(cache_key) is not None:
+
+            # Get the value
+            proj = self.get_cache(cache_key)
+
+            # Return the value
+            if isinstance(proj, str) and proj == "None":
+                return
+            else:
+                return proj
+
+        # The projection needs to be computed
 
         # Get the plotting options
         params = self.all_values(flatten=True)
-
-        # Get the cache key
-        cache_key = self.make_cache_key("projection")
 
         # Get the abundances, filtering to the specified taxonomic level
         # Columns are samples, rows are organisms
@@ -131,19 +147,16 @@ class Ordination(MicrobiomePlot):
             msg = msg + "  \n" + f"Filtering to {params['filter_by']}"
         self._get_child("ord_msg").main_empty.write(msg)
 
-        # Only compute if the cache is empty
-        if self.get_cache(cache_key) is None:
+        if params['ord_type'] == 'PCA':
+            proj, loadings = self.run_pca(abund)
+        elif params['ord_type'] == 't-SNE':
+            proj, loadings = self.run_tsne(abund)
+        else:
+            msg = "Ordination type not recognized"
+            raise WidgetFunctionException(msg)
 
-            if params['ord_type'] == 'PCA':
-                proj, loadings = self.run_pca(abund)
-            elif params['ord_type'] == 't-SNE':
-                proj, loadings = self.run_tsne(abund)
-            else:
-                msg = "Ordination type not recognized"
-                raise WidgetFunctionException(msg)
-
-            self.set_cache(cache_key, proj)
-            self.set_cache(self.make_cache_key("loadings"), loadings)
+        self.set_cache(cache_key, proj)
+        self.set_cache(self.make_cache_key("loadings"), loadings)
 
         return self.get_cache(cache_key)
 
@@ -182,7 +195,7 @@ class Ordination(MicrobiomePlot):
         """Ordinate data using t-SNE"""
 
         tsne = TSNE(
-            n_components=3 if self.option("3D").get_value() else 2
+            n_components=3 if self.val("3D") else 2
         )
         ord_mat = tsne.fit_transform(abund.T)
         coords = pd.DataFrame(
@@ -216,7 +229,7 @@ class Ordination(MicrobiomePlot):
             )
 
         # Get the coloring column
-        color_by = self.option("color_by").get_value()
+        color_by = self.val("color_by")
         if color_by == 'None':
             color_by = None
 
@@ -229,7 +242,7 @@ class Ordination(MicrobiomePlot):
         )
 
         # If the 3D plot was requested
-        if self.option("3D").get_value():
+        if self.val("3D"):
             plot_f = px.scatter_3d
             plot_kwargs['z'] = plot_df.columns.values[2]
         else:
@@ -239,10 +252,10 @@ class Ordination(MicrobiomePlot):
         fig = plot_f(**plot_kwargs)
 
         # Add the PCA loadings, if requested
-        self.add_pca_loadings(fig)
+        self.add_pca_loadings(fig, plot_df)
 
         # If there is a title
-        title = self.option("title").get_value()
+        title = self.val("title")
         if title is not None and title != "None":
             fig.update_layout(title=title)
 
@@ -250,27 +263,35 @@ class Ordination(MicrobiomePlot):
         self._get_child("plot").main_empty.plotly_chart(fig)
 
         # If there is a legend
-        legend = self.option("legend").get_value()
+        legend = self.val("legend")
         if legend is not None:
             self._get_child(
                 "legend_display"
             ).main_empty.markdown(legend)
 
-    def add_pca_loadings(self, fig):
+    def add_pca_loadings(self, fig, plot_df):
 
-        if not self.option("pca_loadings").get_value():
+        if not self.val("pca_loadings"):
             return
 
         # Get the key used in the cache for the loadings
-        loadings = self.get_cache(
-            self.make_cache_key("loadings")
-        )
+        cache_key = self.make_cache_key("loadings")
 
+        # If there is no value in the cache
+        if self.get_cache(cache_key) is None:
+            # Run the ordination to make sure that the cache
+            # is current
+            _ = self.run_ordination()
+
+        # Get any value in the cache
+        loadings = self.get_cache(cache_key)
+
+        # If no value has been computed
         if loadings is None:
             return
 
         # Number of dimensions
-        ndims = 2 + self.option("3D").get_value()
+        ndims = 2 + self.val("3D")
 
         # Just pick the number of axes used in the plot
         loadings = loadings.head(ndims)
@@ -291,6 +312,13 @@ class Ordination(MicrobiomePlot):
             ]
         )
 
+        # Scale each loading to fit nicely on the plot
+        loadings = (
+            plot_df.reindex(
+                columns=loadings.index.values
+            ).abs().max() * loadings.T / loadings.T.abs().max()
+        ).T
+
         for org_name, org_coords in loadings.items():
 
             line_props = dict(
@@ -299,7 +327,7 @@ class Ordination(MicrobiomePlot):
                 mode='lines',
                 name=org_name
             )
-            if self.option("3D").get_value():
+            if self.val("3D"):
                 line_props['z'] = [0, org_coords.values[2]]
                 trace_f = go.Scatter3d
             else:
