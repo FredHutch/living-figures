@@ -25,6 +25,10 @@ jobs:
         with:
           python-version: "3.9"
 
+      - name: Setup python build
+        run: |
+          python -m pip install build
+
       - name: Build scikit-bio
         working-directory: ext/scikit-bio
         run: |
