@@ -12,7 +12,7 @@ on:
       - main
 
 jobs:
-  build-and-push-image:
+  build-and-push-wheels:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -43,6 +43,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          upload_url: ${{ github.event.release.upload_url }}
           asset_path: ext/scikit-bio/dist/*.whl
           asset_name: scikit_bio-0.5.8.whl
+          asset_content_type: application/zip
