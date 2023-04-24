@@ -89,14 +89,17 @@ class Ordination(MicrobiomePlot):
         abund_hash: str = self._root().abund_hash()
 
         # Set the cache key based on the input data and analysis details
-        cache_key = ":".join([
-            abund_hash,
-            self.val('tax_level'),
-            self.val('ord_type'),
-            str(self.val('3D')),
-            str(self.val('filter_by')),
-            val_str
-        ])
+        cache_key = ":".join(map(
+            str,
+            [
+                abund_hash,
+                self.val('tax_level'),
+                self.val('ord_type'),
+                self.val('3D'),
+                self.val('filter_by'),
+                val_str
+            ]
+        ))
 
         return cache_key
 
@@ -113,7 +116,7 @@ class Ordination(MicrobiomePlot):
             proj = self.get_cache(cache_key)
 
             # Return the value
-            if proj == "None":
+            if isinstance(proj, str) and proj == "None":
                 return
             else:
                 return proj

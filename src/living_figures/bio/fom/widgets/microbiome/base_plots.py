@@ -2,11 +2,15 @@ from typing import Any
 import widgets.streamlit as wist
 from widgets.streamlit import StResource
 from widgets.base.exceptions import WidgetFunctionException
+from living_figures.bio.fom.widgets.microbiome.base_widget import BaseMicrobiomeExplorer # noqa
 import streamlit as st
 
 
 class MicrobiomePlot(wist.StResource):
     """Base class with helper functions used for microbiome plots."""
+
+    def _root(self) -> BaseMicrobiomeExplorer:
+        return super()._root()
 
     def option(self, id) -> StResource:
         for r in self._find_child(id):
@@ -14,7 +18,7 @@ class MicrobiomePlot(wist.StResource):
         raise WidgetFunctionException(f"Cannot find option {id}")
 
     def val(self, id) -> Any:
-        return self.val(id)
+        return self.option(id).get_value()
 
     def update_options(self, options, id):
         """Update the set of options for user-provided metadata."""

@@ -131,14 +131,17 @@ class AbundantOrgs(MicrobiomePlot):
         annot_hash: str = self._root().annot_hash()
 
         # Set the cache key based on the input data and analysis details
-        cache_key = ":".join([
-            abund_hash,
-            annot_hash,
-            self.option('tax_level').get_value(),
-            str(self.option('n_orgs').get_value()),
-            str(self.option('sort_by').get_value()),
-            str(self.option('color_by').get_value())
-        ])
+        cache_key = ":".join(map(
+            str,
+            [
+                abund_hash,
+                annot_hash,
+                self.val('tax_level'),
+                self.val('n_orgs'),
+                self.val('sort_by'),
+                self.val('color_by')
+            ]
+        ))
 
         return cache_key
 
@@ -313,7 +316,7 @@ class AbundantOrgs(MicrobiomePlot):
 
     def plot_abund(self, abund_df):
 
-        if self.option("plot_type").get_value() == "Heatmap":
+        if self.val("plot_type") == "Heatmap":
             return self.plot_heatmap(abund_df)
         else:
             return self.plot_bars(abund_df)
@@ -321,7 +324,7 @@ class AbundantOrgs(MicrobiomePlot):
     def plot_heatmap(self, abund_df: pd.DataFrame):
 
         # Color scale used for the heatmap
-        colorscale = self.option("heatmap_cpal").get_value()
+        colorscale = self.val("heatmap_cpal")
 
         # Mouseover text
         text_df = abund_df.apply(
