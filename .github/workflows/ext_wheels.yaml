@@ -1,0 +1,38 @@
+name: Build external wheels
+
+on:
+  release:
+    types:
+      - published
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+
+      - name: Build scikit-bio
+        working-directory: ext/scikit-bio
+        run: |
+          python -m build
+          python -m build --wheel
+
+      - name: Upload wheels to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ext/scikit-bio/dist/*.whl

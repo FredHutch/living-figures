@@ -1,3 +1,6 @@
 [submodule "hugo/themes/hugo-theme-stack"]
 	path = hugo/themes/hugo-theme-stack
 	url = https://github.com/CaiJimmy/hugo-theme-stack/
+[submodule "ext/scikit-bio"]
+	path = ext/scikit-bio
+	url = https://github.com/biocore/scikit-bio/
