@@ -298,6 +298,12 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
             f"[Pan-Epigenome Browser Documentation]({docs_url})"
         )
 
+        # Link to the online issues
+        bugs_url = "https://github.com/FredHutch/living-figures/issues"
+        self.sidebar_container.markdown(
+            f"[Report Bugs]({bugs_url})"
+        )
+
     def update_annotation_selectors(self):
 
         genomes_annot = self.get(["files", "genomes_annot"])
