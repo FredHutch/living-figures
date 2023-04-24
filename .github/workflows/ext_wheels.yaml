@@ -39,6 +39,7 @@ jobs:
           python -m build --wheel
 
       - name: Upload scikit-bio wheel
+        if: github.event_name == 'release'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
