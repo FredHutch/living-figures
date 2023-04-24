@@ -253,14 +253,9 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
         else:
 
             # See if any of the options are missing
-            missing_options = [
-                option
-                for option in df.reindex(
-                    columns=['id']
-                ).dropna(
-                )['id'].drop_duplicates().tolist()
-                if option not in all_options
-            ]
+            missing_options = list(
+                set(all_options) - set(df['id'].dropna().tolist())
+            )
 
             # If no options are missing, we're done
             if len(missing_options) == 0:
