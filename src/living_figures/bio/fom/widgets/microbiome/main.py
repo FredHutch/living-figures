@@ -1,12 +1,10 @@
 from copy import deepcopy
-import numpy as np
-import pandas as pd
 from living_figures.bio.fom.widgets.microbiome import MicrobiomeAbund
 from living_figures.bio.fom.widgets.microbiome import StHashedDataFrame
 from living_figures.bio.fom.widgets.microbiome import Ordination
 from living_figures.bio.fom.widgets.microbiome import AbundantOrgs
 from living_figures.bio.fom.widgets.microbiome import AlphaDiversity
-from living_figures.bio.fom.widgets.microbiome.base_widget import BaseMicrobiomeExplorer
+from living_figures.bio.fom.widgets.microbiome.base_widget import BaseMicrobiomeExplorer # noqa
 import widgets.streamlit as wist
 
 

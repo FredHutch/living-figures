@@ -7,7 +7,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
-import streamlit as st
 from living_figures.helpers.constants import tax_levels
 
 
@@ -120,7 +119,7 @@ class Ordination(MicrobiomePlot):
                 return
             else:
                 return proj
-            
+
         # The projection needs to be computed
 
         # Get the plotting options

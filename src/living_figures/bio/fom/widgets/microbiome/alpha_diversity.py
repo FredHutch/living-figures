@@ -4,13 +4,9 @@ from typing import Union
 from living_figures.bio.fom.widgets.microbiome.base_plots import MicrobiomePlot
 from living_figures.helpers.constants import tax_levels
 from living_figures.helpers.parse_numeric import is_numeric
-from living_figures.helpers.scaling import convert_text_to_scalar
-from living_figures.helpers.sorting import sort_table
 import widgets.streamlit as wist
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 
 class AlphaDiversity(MicrobiomePlot):
@@ -212,7 +208,7 @@ class AlphaDiversity(MicrobiomePlot):
         if is_numeric(stats_df[color_by]):
             return _self.spearman(stats_df, metric, color_by)
         else:
-            return _self.permanova(stats_df, metric, color_by)
+            return _self.anova(stats_df, metric, color_by)
 
     @st.cache_data(max_entries=10)
     def calc_adiv(_self, **kwargs) -> Union[None, pd.DataFrame]:
@@ -331,11 +327,13 @@ class AlphaDiversity(MicrobiomePlot):
 
         return msg
 
-    def permanova(
+    def anova(
         self,
         adiv: pd.DataFrame,
         metric: str,
         color_by: str
     ) -> None:
 
-        pass
+        print(color_by)
+        print(metric)
+        print(adiv)

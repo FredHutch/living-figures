@@ -157,6 +157,7 @@ class AbundantOrgs(MicrobiomePlot):
         ])
 
         return abund
+
     def get_plotting_data(self):
         """Return the data used for plotting, using the cache when possible."""
 
@@ -164,7 +165,7 @@ class AbundantOrgs(MicrobiomePlot):
         if self.get_cache(self.make_cache_key()) is not None:
             # Return the cached data
             return self.get_cache(self.make_cache_key())
-        
+
         # If the cache is not populated
 
         # Get the abundance data to plot
