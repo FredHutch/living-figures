@@ -38,8 +38,8 @@ jobs:
           python -m build
           python -m build --wheel
 
-      - name: Upload wheels to release
-        uses: svenstaro/upload-release-action@v2
+      - name: Upload scikit-bio
+        uses: actions/upload-artifact@v3
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ext/scikit-bio/dist/*.whl
+          name: scikit-bio.whl
+          path: ext/scikit-bio/build/*.whl
