@@ -13,8 +13,18 @@ def parse_tax_string(tax_str):
 
     tax_dat['path'] = tax_str.split(sep)
 
+    # Remove any organisms lacking names
+    tax_dat['path'] = [
+        org_id
+        for org_id in tax_dat['path']
+        if not org_id.endswith("__")
+    ]
+
     # Parse the final field
     final_org = tax_dat['path'][-1]
+
+    # Format the canonical path using the | separator
+    tax_dat['path'] = '|'.join(tax_dat['path'])
 
     if '__' not in final_org:
         tax_dat["name"] = final_org

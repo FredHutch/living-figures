@@ -1,4 +1,4 @@
-from scipy.stats import entropy, spearmanr, pearsonr
+from scipy.stats import entropy, spearmanr, pearsonr, f_oneway
 import streamlit as st
 from typing import Union
 from living_figures.bio.fom.widgets.microbiome.base_plots import MicrobiomePlot
@@ -243,11 +243,11 @@ class AlphaDiversity(MicrobiomePlot):
 
         # Make the plot
         if kwargs["plot_type"] == "Distribution":
-            fig = _self.plot_distribution(adiv)
+            fig = _self.plot_distribution(adiv, **kwargs)
         elif kwargs["plot_type"] == "Points":
-            fig = _self.plot_points(adiv)
+            fig = _self.plot_points(adiv, **kwargs)
         elif kwargs["plot_type"] == "Bars":
-            fig = _self.plot_bars(adiv)
+            fig = _self.plot_bars(adiv, **kwargs)
         else:
             msg = f"Unrecognized plot type {kwargs['plot_type']}"
             _self.option("plot_msg").main_empty.write(msg)
@@ -258,26 +258,29 @@ class AlphaDiversity(MicrobiomePlot):
 
         return fig
 
-    def plot_distribution(self, adiv: pd.DataFrame):
+    def plot_distribution(
+        self,
+        adiv: pd.DataFrame,
+        metric: str = None,
+        color_by: str = None,
+        **kwargs
+    ):
 
         plot_data = dict(
             data_frame=adiv,
-            x=self.val("metric")
+            x=metric
         )
-        layout = dict(
-            yaxis_title="Number of Samples"
-        )
+        layout = dict()
 
         plot_f = px.histogram
 
         # If there is a grouping
-        color_by = self.val("color_by")
         if color_by is not None and color_by != 'None':
 
             # Only show samples which have the metadata assigned
             plot_data["data_frame"] = plot_data["data_frame"].reindex(
                 columns=[
-                    self.val("metric"),
+                    metric,
                     color_by
                 ]
             ).dropna()
@@ -297,6 +300,53 @@ class AlphaDiversity(MicrobiomePlot):
                 plot_data["facet_row"] = color_by
 
         fig = plot_f(**plot_data)
+        fig.update_layout(
+            **layout
+        )
+
+        return fig
+
+    def plot_points(
+        self,
+        adiv: pd.DataFrame,
+        metric: str = None,
+        color_by: str = None,
+        **kwargs
+    ):
+
+        plot_data = dict(
+            data_frame=adiv.sort_values(
+                by=metric,
+                ascending=False
+            ).reset_index().rename(
+                columns=dict(index="Sample")
+            ),
+            x="Sample",
+            y=metric
+        )
+        layout = dict()
+
+        # If there is a grouping
+        if color_by is not None and color_by != 'None':
+
+            # Only show samples which have the metadata assigned
+            plot_data["data_frame"] = plot_data["data_frame"].reindex(
+                columns=[metric, color_by, "Sample"]
+            ).dropna()
+
+            # Color points
+            plot_data["color"] = color_by
+
+            # If the value is categorical
+            if not is_numeric(adiv[color_by]):
+
+                # Sort by category
+                plot_data["data_frame"] = plot_data["data_frame"].sort_values(
+                    by=[color_by, metric],
+                    ascending=[True, False]
+                )
+
+        fig = px.scatter(**plot_data)
         fig.update_layout(
             **layout
         )
@@ -334,6 +384,17 @@ class AlphaDiversity(MicrobiomePlot):
         color_by: str
     ) -> None:
 
-        print(color_by)
-        print(metric)
-        print(adiv)
+        r = f_oneway(*[
+            vals
+            for group, vals in adiv[
+                metric
+            ].groupby(
+                adiv[color_by]
+            )
+            if group is not None
+        ])
+        return " ".join([
+            "ANOVA:",
+            f"statistic={r.statistic:.2g},",
+            f"p={r.pvalue:.2g}"
+        ])

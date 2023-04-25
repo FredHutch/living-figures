@@ -43,6 +43,7 @@ class BaseMicrobiomeExplorer(wist.StreamlitWidget):
             )
 
             if abund.shape[0] == 0:
+                self.main_container.write(index_orgs)
                 msg = f"No organisms classified at the {level} level"
                 raise WidgetFunctionException(msg)
 

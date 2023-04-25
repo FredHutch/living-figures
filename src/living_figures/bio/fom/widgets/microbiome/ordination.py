@@ -81,32 +81,8 @@ class Ordination(MicrobiomePlot):
         wist.StResource(id="legend_display")
     ]
 
-    def make_cache_key(self, val_str: str):
-        """Return a cache key for the plot data."""
-
-        # Get the hash of the input data
-        abund_hash: str = self._root().abund_hash()
-
-        # Set the cache key based on the input data and analysis details
-        cache_key = ":".join(map(
-            str,
-            [
-                abund_hash,
-                self.val('tax_level'),
-                self.val('ord_type'),
-                self.val('3D'),
-                self.val('filter_by'),
-                val_str
-            ]
-        ))
-
-        return cache_key
-
     def run_ordination(self) -> Union[None, pd.DataFrame]:
         """Perform ordination on the abundance data."""
-
-        # Get the cache key
-        cache_key = self.make_cache_key("projection")
 
         # If a value has been computed
         if self.get_cache(cache_key) is not None:
@@ -155,10 +131,7 @@ class Ordination(MicrobiomePlot):
             msg = "Ordination type not recognized"
             raise WidgetFunctionException(msg)
 
-        self.set_cache(cache_key, proj)
-        self.set_cache(self.make_cache_key("loadings"), loadings)
-
-        return self.get_cache(cache_key)
+        return proj
 
     def run_pca(self, abund: pd.DataFrame):
         """Ordinate data using PCA"""
@@ -273,18 +246,6 @@ class Ordination(MicrobiomePlot):
 
         if not self.val("pca_loadings"):
             return
-
-        # Get the key used in the cache for the loadings
-        cache_key = self.make_cache_key("loadings")
-
-        # If there is no value in the cache
-        if self.get_cache(cache_key) is None:
-            # Run the ordination to make sure that the cache
-            # is current
-            _ = self.run_ordination()
-
-        # Get any value in the cache
-        loadings = self.get_cache(cache_key)
 
         # If no value has been computed
         if loadings is None:
