@@ -4,6 +4,7 @@ from typing import Union
 from living_figures.bio.fom.widgets.microbiome.base_plots import MicrobiomePlot
 from living_figures.helpers.constants import tax_levels
 from living_figures.helpers.parse_numeric import is_numeric
+from widgets.base.exceptions import WidgetFunctionException
 import widgets.streamlit as wist
 import pandas as pd
 import plotly.express as px
@@ -33,7 +34,6 @@ class AlphaDiversity(MicrobiomePlot):
     children = [
         wist.StExpander(
             id="options",
-            expanded=True,
             children=[
                 wist.StColumns(
                     id="row1",
@@ -108,13 +108,14 @@ class AlphaDiversity(MicrobiomePlot):
         wist.StResource(id="legend_display")
     ]
 
+    @st.cache_data(max_entries=10)
     def get_alpha_diversity(_self, **kwargs) -> Union[None, pd.DataFrame]:
         """Return a table with the alpha diversity metrics for each sample."""
 
         # Get the abundances
         abund = _self._root().abund(
-            level=_self.val("tax_level"),
-            filter=_self.val("filter_by")
+            level=kwargs["tax_level"],
+            filter=kwargs["filter_by"]
         )
 
         # If there are no abundances
@@ -122,7 +123,7 @@ class AlphaDiversity(MicrobiomePlot):
             return
 
         # Calculate the selected alpha diversity
-        metric = _self.val('metric')
+        metric = kwargs['metric']
         if metric == "Shannon":
             adiv = _self.calc_shannon(abund)
         else:
@@ -194,7 +195,7 @@ class AlphaDiversity(MicrobiomePlot):
         if corr_msg is not None:
             self.option("plot_msg").main_empty.write(corr_msg)
 
-    # @st.cache_data
+    @st.cache_data
     def report_corr(_self, adiv, metric, color_by):
         """Print any correlation metrics."""
 
@@ -245,13 +246,12 @@ class AlphaDiversity(MicrobiomePlot):
         if kwargs["plot_type"] == "Distribution":
             fig = _self.plot_distribution(adiv, **kwargs)
         elif kwargs["plot_type"] == "Points":
-            fig = _self.plot_points(adiv, **kwargs)
+            fig = _self.plot_points_bars(px.scatter, adiv, **kwargs)
         elif kwargs["plot_type"] == "Bars":
-            fig = _self.plot_bars(adiv, **kwargs)
+            fig = _self.plot_points_bars(px.bar, adiv, **kwargs)
         else:
             msg = f"Unrecognized plot type {kwargs['plot_type']}"
-            _self.option("plot_msg").main_empty.write(msg)
-            return
+            raise WidgetFunctionException(msg)
 
         if kwargs["title"] is not None and kwargs["title"] != "None":
             fig.update_layout(title=kwargs["title"])
@@ -306,8 +306,9 @@ class AlphaDiversity(MicrobiomePlot):
 
         return fig
 
-    def plot_points(
+    def plot_points_bars(
         self,
+        plot_f,
         adiv: pd.DataFrame,
         metric: str = None,
         color_by: str = None,
@@ -346,7 +347,7 @@ class AlphaDiversity(MicrobiomePlot):
                     ascending=[True, False]
                 )
 
-        fig = px.scatter(**plot_data)
+        fig = plot_f(**plot_data)
         fig.update_layout(
             **layout
         )

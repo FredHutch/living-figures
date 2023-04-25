@@ -36,6 +36,11 @@ class MicrobiomeExplorer(BaseMicrobiomeExplorer):
             expanded=True,
             children=[
                 MicrobiomeAbund(id="abund"),
+                wist.StDownloadDataFrame(
+                    target="abund",
+                    label="Download Abundances",
+                    index=True
+                ),
                 StHashedDataFrame(
                     id="annots",
                     label="Sample Annotations"
