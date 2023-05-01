@@ -39,20 +39,17 @@ class AlphaDiversity(MicrobiomePlot):
                     id="row1",
                     children=[
                         wist.StSelectString(
-                            id='plot_type',
-                            label="Plot Type",
-                            options=[
-                                'Distribution',
-                                'Points',
-                                'Bars'
-                            ],
-                            value='Distribution'
-                        ),
-                        wist.StSelectString(
                             id="tax_level",
                             label="Taxonomic Level",
                             options=tax_levels,
                             value="genus"
+                        ),
+                        wist.StInteger(
+                            id="nbins",
+                            label="Number of Bins",
+                            min_value=5,
+                            max_value=100,
+                            value=20
                         )
                     ]
                 ),
@@ -195,6 +192,14 @@ class AlphaDiversity(MicrobiomePlot):
         if corr_msg is not None:
             self.option("plot_msg").main_empty.write(corr_msg)
 
+        # If there is a legend
+        if kwargs['legend'] is not None:
+            self._get_child(
+                "legend_display"
+            ).main_empty.markdown(
+                kwargs['legend']
+            )
+
     @st.cache_data
     def report_corr(_self, adiv, metric, color_by):
         """Print any correlation metrics."""
@@ -238,20 +243,12 @@ class AlphaDiversity(MicrobiomePlot):
 
         return adiv
 
-    @st.cache_data(max_entries=10)
+    # @st.cache_data(max_entries=10)
     def make_fig(_self, adiv, **kwargs):
         """Make the primary figure for plotting."""
 
         # Make the plot
-        if kwargs["plot_type"] == "Distribution":
-            fig = _self.plot_distribution(adiv, **kwargs)
-        elif kwargs["plot_type"] == "Points":
-            fig = _self.plot_points_bars(px.scatter, adiv, **kwargs)
-        elif kwargs["plot_type"] == "Bars":
-            fig = _self.plot_points_bars(px.bar, adiv, **kwargs)
-        else:
-            msg = f"Unrecognized plot type {kwargs['plot_type']}"
-            raise WidgetFunctionException(msg)
+        fig = _self.plot_distribution(adiv, **kwargs)
 
         if kwargs["title"] is not None and kwargs["title"] != "None":
             fig.update_layout(title=kwargs["title"])
@@ -263,14 +260,19 @@ class AlphaDiversity(MicrobiomePlot):
         adiv: pd.DataFrame,
         metric: str = None,
         color_by: str = None,
+        nbins: int = 20,
         **kwargs
     ):
 
         plot_data = dict(
-            data_frame=adiv,
-            x=metric
+            data_frame=adiv.reset_index(),
+            y=metric,
+            hover_name="index",
+            nbins=nbins
         )
-        layout = dict()
+        layout = dict(
+            xaxis_title="Number of samples"
+        )
 
         plot_f = px.histogram
 
@@ -280,6 +282,7 @@ class AlphaDiversity(MicrobiomePlot):
             # Only show samples which have the metadata assigned
             plot_data["data_frame"] = plot_data["data_frame"].reindex(
                 columns=[
+                    "index",
                     metric,
                     color_by
                 ]
@@ -290,14 +293,26 @@ class AlphaDiversity(MicrobiomePlot):
                 # Make a scatterplot
                 plot_f = px.scatter
                 # With the y-axis as the metadata
-                plot_data["y"] = color_by
+                plot_data["x"] = color_by
                 # Label the y axis
-                layout["yaxis_title"] = color_by
+                layout["xaxis_title"] = color_by
+                # Add a marginal histogram
+                plot_data["marginal_y"] = "histogram"
+                del plot_data["nbins"]
 
             # If the value is categorical
             else:
-                # Make a facet row
-                plot_data["facet_row"] = color_by
+                # Make a facet column
+                plot_data["facet_col"] = color_by
+
+                # Add the xaxis title for all subplots
+                for i in range(
+                    plot_data["data_frame"][color_by].unique().shape[0]
+                ):
+                    axis_name = 'xaxis' if i == 0 else f'xaxis{i+1}'
+                    if axis_name not in layout:
+                        layout[axis_name] = dict()
+                    layout[axis_name]['title'] = "Number of samples"
 
         fig = plot_f(**plot_data)
         fig.update_layout(
