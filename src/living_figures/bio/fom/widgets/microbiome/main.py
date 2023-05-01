@@ -4,6 +4,7 @@ from living_figures.bio.fom.widgets.microbiome import StHashedDataFrame
 from living_figures.bio.fom.widgets.microbiome import Ordination
 from living_figures.bio.fom.widgets.microbiome import AbundantOrgs
 from living_figures.bio.fom.widgets.microbiome import AlphaDiversity
+from living_figures.bio.fom.widgets.microbiome import BetaDiversity
 from living_figures.bio.fom.widgets.microbiome.base_widget import BaseMicrobiomeExplorer # noqa
 import widgets.streamlit as wist
 
@@ -60,7 +61,8 @@ class MicrobiomeExplorer(BaseMicrobiomeExplorer):
                     options=[
                         AbundantOrgs(id="abundant_orgs"),
                         Ordination(id="ordination"),
-                        AlphaDiversity(id="alpha_diversity")
+                        AlphaDiversity(id="alpha_diversity"),
+                        BetaDiversity(id="beta_diversity")
                     ]
                 ))
                 for i in range(20)

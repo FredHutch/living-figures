@@ -238,7 +238,8 @@ class BaseMicrobiomeExplorer(wist.StreamlitWidget):
         for plot_type in [
             "ordination",
             "abundant_orgs",
-            "alpha_diversity"
+            "alpha_diversity",
+            "beta_diversity"
         ]:
 
             # For each of the elements of this type

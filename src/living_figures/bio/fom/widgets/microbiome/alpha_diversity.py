@@ -4,7 +4,6 @@ from typing import Union
 from living_figures.bio.fom.widgets.microbiome.base_plots import MicrobiomePlot
 from living_figures.helpers.constants import tax_levels
 from living_figures.helpers.parse_numeric import is_numeric
-from widgets.base.exceptions import WidgetFunctionException
 import widgets.streamlit as wist
 import pandas as pd
 import plotly.express as px
