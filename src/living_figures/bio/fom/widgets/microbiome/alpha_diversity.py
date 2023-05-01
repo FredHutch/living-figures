@@ -38,17 +38,19 @@ class AlphaDiversity(MicrobiomePlot):
                     id="row1",
                     children=[
                         wist.StSelectString(
+                            id="metric",
+                            label="Diversity Metric",
+                            options=[
+                                "Shannon",
+                                "Simpson"
+                            ],
+                            value="Shannon"
+                        ),
+                        wist.StSelectString(
                             id="tax_level",
                             label="Taxonomic Level",
                             options=tax_levels,
                             value="genus"
-                        ),
-                        wist.StInteger(
-                            id="nbins",
-                            label="Number of Bins",
-                            min_value=5,
-                            max_value=100,
-                            value=20
                         )
                     ]
                 ),
@@ -71,14 +73,12 @@ class AlphaDiversity(MicrobiomePlot):
                 wist.StColumns(
                     id='row3',
                     children=[
-                        wist.StSelectString(
-                            id="metric",
-                            label="Diversity Metric",
-                            options=[
-                                "Shannon",
-                                "Simpson"
-                            ],
-                            value="Shannon"
+                        wist.StInteger(
+                            id="nbins",
+                            label="Number of Bins",
+                            min_value=5,
+                            max_value=100,
+                            value=20
                         ),
                         wist.StInteger(
                             label="Figure Height",
@@ -291,9 +291,9 @@ class AlphaDiversity(MicrobiomePlot):
             if is_numeric(adiv[color_by]):
                 # Make a scatterplot
                 plot_f = px.scatter
-                # With the y-axis as the metadata
+                # With the x-axis as the metadata
                 plot_data["x"] = color_by
-                # Label the y axis
+                # Label the x axis
                 layout["xaxis_title"] = color_by
                 # Add a marginal histogram
                 plot_data["marginal_y"] = "histogram"
@@ -314,6 +314,14 @@ class AlphaDiversity(MicrobiomePlot):
                     layout[axis_name]['title'] = "Number of samples"
 
         fig = plot_f(**plot_data)
+
+        # Clean up the marginal titles
+        if color_by is not None:
+            fig.for_each_annotation(
+                lambda a: a.update(text=a.text.split("=")[-1])
+            )
+
+        # Apply the layout customizations
         fig.update_layout(
             **layout
         )
