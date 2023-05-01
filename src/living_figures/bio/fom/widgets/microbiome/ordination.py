@@ -88,17 +88,9 @@ class Ordination(MicrobiomePlot):
         tax_level,
         filter_by,
         ord_type,
-        abund_hash,
-        annot_hash
+        abund: pd.DataFrame
     ) -> Union[None, pd.DataFrame]:
         """Perform ordination on the abundance data."""
-
-        # Get the abundances, filtering to the specified taxonomic level
-        # Columns are samples, rows are organisms
-        abund: pd.DataFrame = _self._root().abund(
-            level=tax_level,
-            filter=filter_by
-        )
 
         # If there are no abundances
         if abund is None:
@@ -121,7 +113,7 @@ class Ordination(MicrobiomePlot):
             msg = "Ordination type not recognized"
             raise WidgetFunctionException(msg)
 
-        return proj, loadings, None
+        return proj, loadings, ""
 
     def run_pca(self, abund: pd.DataFrame):
         """Ordinate data using PCA"""
@@ -180,18 +172,29 @@ class Ordination(MicrobiomePlot):
         # Get all of the plotting parameters
         params = self.all_values(flatten=True)
 
+        # Get the abundances, filtering to the specified taxonomic level
+        # Columns are samples, rows are organisms
+        abund: pd.DataFrame = self._root().abund(
+            level=params["tax_level"],
+            filter=params["filter_by"]
+        )
+
+        # Get the sample annotations
+        sample_annots = self._root().sample_annotations()
+
         fig, msg = self.build_fig(
             params["tax_level"],
             params["filter_by"],
             params["ord_type"],
-            self._root().abund_hash(),
-            self._root().annot_hash(),
+            abund,
+            sample_annots,
             params["3D"],
             params["color_by"],
             params["title"],
             params["pca_loadings"],
         )
-        if msg is not None:
+
+        if msg is not None and len(msg) > 0:
             self._get_child("ord_msg").main_empty.write(msg)
         if fig is None:
             return
@@ -213,8 +216,8 @@ class Ordination(MicrobiomePlot):
         tax_level,
         filter_by,
         ord_type,
-        abund_hash,
-        annot_hash,
+        abund,
+        sample_annots,
         is_3d,
         color_by,
         title,
@@ -226,15 +229,13 @@ class Ordination(MicrobiomePlot):
             tax_level,
             filter_by,
             ord_type,
-            abund_hash,
-            annot_hash
+            abund
         )
 
         if plot_df is None:
             return None, msg
 
         # Add the metadata (if any was provided)
-        sample_annots = _self._root().sample_annotations()
         if sample_annots is not None:
             plot_df = plot_df.merge(
                 sample_annots,
