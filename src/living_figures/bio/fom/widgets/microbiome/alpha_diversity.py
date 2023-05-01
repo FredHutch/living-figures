@@ -242,7 +242,7 @@ class AlphaDiversity(MicrobiomePlot):
 
         return adiv
 
-    # @st.cache_data(max_entries=10)
+    @st.cache_data(max_entries=10)
     def make_fig(_self, adiv, **kwargs):
         """Make the primary figure for plotting."""
 

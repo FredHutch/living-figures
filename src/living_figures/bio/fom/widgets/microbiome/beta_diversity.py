@@ -162,7 +162,7 @@ class BetaDiversity(MicrobiomePlot):
         else:
             return f"{minlabel} vs. {maxlabel}"
 
-    # @st.cache_data(max_entries=10)
+    @st.cache_data(max_entries=10)
     def make_dm(
         _self,
         abund: pd.DataFrame,
@@ -181,7 +181,7 @@ class BetaDiversity(MicrobiomePlot):
             columns=abund.columns
         )
 
-    # @st.cache_data(max_entries=10)
+    @st.cache_data(max_entries=10)
     def melt_dm(
         _self,
         dm: pd.DataFrame
@@ -287,7 +287,7 @@ class BetaDiversity(MicrobiomePlot):
                 params['legend']
             )
 
-    # @st.cache_data(max_entries=10)
+    @st.cache_data(max_entries=10)
     def build_fig(
         _self,
         abund,

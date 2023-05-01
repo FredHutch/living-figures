@@ -239,7 +239,8 @@ class BaseMicrobiomeExplorer(wist.StreamlitWidget):
             "ordination",
             "abundant_orgs",
             "alpha_diversity",
-            "beta_diversity"
+            "beta_diversity",
+            "differential_abundance",
         ]:
 
             # For each of the elements of this type
