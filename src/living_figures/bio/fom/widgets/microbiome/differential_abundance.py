@@ -163,23 +163,23 @@ class DifferentialAbundance(MicrobiomePlot):
 
         fig = px.scatter(
             data_frame=da_df,
-            x="Test Statistic",
-            y="FDR (-log10)",
-            color="Mean Abundance",
+            x="Mean Abundance",
+            y="p-value (-log10)",
+            color="Test Statistic",
             hover_name="Organism",
             hover_data=[
                 "Mean Abundance",
                 "Test Statistic",
                 "p-value",
+                "p-value (-log10)",
                 "FDR (-log10)",
                 "FDR"
             ],
-            color_continuous_scale="RdBu"
+            color_continuous_scale="RdBu",
+            log_x=True
         )
         layout = dict(
-            yaxis_title="FDR-adjusted p-value (-log10)",
-            xaxis_title="Test Statistic",
-            coloraxis_colorbar_title="Abundance<br>Mean (%)"
+            yaxis_title="FDR-adjusted p-value (-log10)"
         )
 
         if kwargs["title"] is not None and kwargs["title"] != "None":
@@ -205,7 +205,8 @@ class DifferentialAbundance(MicrobiomePlot):
         df = df.assign(
             FDR=multipletests(df["p-value"])[1],
             **{
-                "FDR (-log10)": lambda d: -np.log10(d['FDR'])
+                "p-value (-log10)": lambda d: -np.log10(d['p-value'].clip(lower=d['p-value'][d['p-value'] > 0].min())), # noqa
+                "FDR (-log10)": lambda d: -np.log10(d['FDR'].clip(lower=d['FDR'][d['FDR'] > 0].min())) # noqa
             }
         )
 

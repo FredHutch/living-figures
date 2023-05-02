@@ -82,7 +82,10 @@ class MicrobiomeExplorer(BaseMicrobiomeExplorer):
         "import numpy as np",
         "import pandas as pd",
         "from typing import Union, Any, List",
-        "from widgets.base.exceptions import WidgetFunctionException"
+        "from widgets.base.exceptions import WidgetFunctionException",
+        "from living_figures.bio.fom.utilities import parse_taxon_abundances",
+        "from living_figures.bio.fom.widgets.microbiome.base_widget import BaseMicrobiomeExplorer", # noqa
+        "from hashlib import md5"
     ]
 
     def run_self(self):
