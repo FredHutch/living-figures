@@ -82,8 +82,13 @@ class MicrobiomeExplorer(BaseMicrobiomeExplorer):
         "from living_figures.helpers import parse_numeric, is_numeric",
         "import numpy as np",
         "import pandas as pd",
+        "from plotly.subplots import make_subplots",
+        "import plotly.express as px",
+        "import plotly.graph_objects as go",
         "from typing import Union, Any, List",
         "from widgets.base.exceptions import WidgetFunctionException",
+        "from widgets.base.helpers import parse_dataframe_string",
+        "from living_figures.helpers.sorting import sort_table",
         "from living_figures.bio.fom.utilities import parse_taxon_abundances",
         "from living_figures.bio.fom.widgets.microbiome.base_widget import BaseMicrobiomeExplorer", # noqa
         "from hashlib import md5"
