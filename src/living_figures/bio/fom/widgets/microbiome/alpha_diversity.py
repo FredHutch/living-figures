@@ -1,4 +1,4 @@
-from scipy.stats import entropy, spearmanr, pearsonr
+from scipy.stats import entropy, spearmanr, pearsonr, f_oneway
 import streamlit as st
 from typing import Union
 from living_figures.bio.fom.widgets.microbiome.base_plots import MicrobiomePlot
@@ -33,20 +33,18 @@ class AlphaDiversity(MicrobiomePlot):
     children = [
         wist.StExpander(
             id="options",
-            expanded=True,
             children=[
                 wist.StColumns(
                     id="row1",
                     children=[
                         wist.StSelectString(
-                            id='plot_type',
-                            label="Plot Type",
+                            id="metric",
+                            label="Diversity Metric",
                             options=[
-                                'Distribution',
-                                'Points',
-                                'Bars'
+                                "Shannon",
+                                "Simpson"
                             ],
-                            value='Distribution'
+                            value="Shannon"
                         ),
                         wist.StSelectString(
                             id="tax_level",
@@ -75,14 +73,12 @@ class AlphaDiversity(MicrobiomePlot):
                 wist.StColumns(
                     id='row3',
                     children=[
-                        wist.StSelectString(
-                            id="metric",
-                            label="Diversity Metric",
-                            options=[
-                                "Shannon",
-                                "Simpson"
-                            ],
-                            value="Shannon"
+                        wist.StInteger(
+                            id="nbins",
+                            label="Number of Bins",
+                            min_value=5,
+                            max_value=100,
+                            value=20
                         ),
                         wist.StInteger(
                             label="Figure Height",
@@ -108,13 +104,14 @@ class AlphaDiversity(MicrobiomePlot):
         wist.StResource(id="legend_display")
     ]
 
+    @st.cache_data(max_entries=10)
     def get_alpha_diversity(_self, **kwargs) -> Union[None, pd.DataFrame]:
         """Return a table with the alpha diversity metrics for each sample."""
 
         # Get the abundances
         abund = _self._root().abund(
-            level=_self.val("tax_level"),
-            filter=_self.val("filter_by")
+            level=kwargs["tax_level"],
+            filter=kwargs["filter_by"]
         )
 
         # If there are no abundances
@@ -122,7 +119,7 @@ class AlphaDiversity(MicrobiomePlot):
             return
 
         # Calculate the selected alpha diversity
-        metric = _self.val('metric')
+        metric = kwargs['metric']
         if metric == "Shannon":
             adiv = _self.calc_shannon(abund)
         else:
@@ -194,7 +191,15 @@ class AlphaDiversity(MicrobiomePlot):
         if corr_msg is not None:
             self.option("plot_msg").main_empty.write(corr_msg)
 
-    # @st.cache_data
+        # If there is a legend
+        if kwargs['legend'] is not None:
+            self._get_child(
+                "legend_display"
+            ).main_empty.markdown(
+                kwargs['legend']
+            )
+
+    @st.cache_data
     def report_corr(_self, adiv, metric, color_by):
         """Print any correlation metrics."""
 
@@ -242,42 +247,42 @@ class AlphaDiversity(MicrobiomePlot):
         """Make the primary figure for plotting."""
 
         # Make the plot
-        if kwargs["plot_type"] == "Distribution":
-            fig = _self.plot_distribution(adiv)
-        elif kwargs["plot_type"] == "Points":
-            fig = _self.plot_points(adiv)
-        elif kwargs["plot_type"] == "Bars":
-            fig = _self.plot_bars(adiv)
-        else:
-            msg = f"Unrecognized plot type {kwargs['plot_type']}"
-            _self.option("plot_msg").main_empty.write(msg)
-            return
+        fig = _self.plot_distribution(adiv, **kwargs)
 
         if kwargs["title"] is not None and kwargs["title"] != "None":
             fig.update_layout(title=kwargs["title"])
 
         return fig
 
-    def plot_distribution(self, adiv: pd.DataFrame):
+    def plot_distribution(
+        self,
+        adiv: pd.DataFrame,
+        metric: str = None,
+        color_by: str = None,
+        nbins: int = 20,
+        **kwargs
+    ):
 
         plot_data = dict(
-            data_frame=adiv,
-            x=self.val("metric")
+            data_frame=adiv.reset_index(),
+            y=metric,
+            hover_name="index",
+            nbins=nbins
         )
         layout = dict(
-            yaxis_title="Number of Samples"
+            xaxis_title="Number of samples"
         )
 
         plot_f = px.histogram
 
         # If there is a grouping
-        color_by = self.val("color_by")
         if color_by is not None and color_by != 'None':
 
             # Only show samples which have the metadata assigned
             plot_data["data_frame"] = plot_data["data_frame"].reindex(
                 columns=[
-                    self.val("metric"),
+                    "index",
+                    metric,
                     color_by
                 ]
             ).dropna()
@@ -286,15 +291,83 @@ class AlphaDiversity(MicrobiomePlot):
             if is_numeric(adiv[color_by]):
                 # Make a scatterplot
                 plot_f = px.scatter
-                # With the y-axis as the metadata
-                plot_data["y"] = color_by
-                # Label the y axis
-                layout["yaxis_title"] = color_by
+                # With the x-axis as the metadata
+                plot_data["x"] = color_by
+                # Label the x axis
+                layout["xaxis_title"] = color_by
+                # Add a marginal histogram
+                plot_data["marginal_y"] = "histogram"
+                del plot_data["nbins"]
 
             # If the value is categorical
             else:
-                # Make a facet row
-                plot_data["facet_row"] = color_by
+                # Make a facet column
+                plot_data["facet_col"] = color_by
+
+                # Add the xaxis title for all subplots
+                for i in range(
+                    plot_data["data_frame"][color_by].unique().shape[0]
+                ):
+                    axis_name = 'xaxis' if i == 0 else f'xaxis{i+1}'
+                    if axis_name not in layout:
+                        layout[axis_name] = dict()
+                    layout[axis_name]['title'] = "Number of samples"
+
+        fig = plot_f(**plot_data)
+
+        # Clean up the marginal titles
+        if color_by is not None:
+            fig.for_each_annotation(
+                lambda a: a.update(text=a.text.split("=")[-1])
+            )
+
+        # Apply the layout customizations
+        fig.update_layout(
+            **layout
+        )
+
+        return fig
+
+    def plot_points_bars(
+        self,
+        plot_f,
+        adiv: pd.DataFrame,
+        metric: str = None,
+        color_by: str = None,
+        **kwargs
+    ):
+
+        plot_data = dict(
+            data_frame=adiv.sort_values(
+                by=metric,
+                ascending=False
+            ).reset_index().rename(
+                columns=dict(index="Sample")
+            ),
+            x="Sample",
+            y=metric
+        )
+        layout = dict()
+
+        # If there is a grouping
+        if color_by is not None and color_by != 'None':
+
+            # Only show samples which have the metadata assigned
+            plot_data["data_frame"] = plot_data["data_frame"].reindex(
+                columns=[metric, color_by, "Sample"]
+            ).dropna()
+
+            # Color points
+            plot_data["color"] = color_by
+
+            # If the value is categorical
+            if not is_numeric(adiv[color_by]):
+
+                # Sort by category
+                plot_data["data_frame"] = plot_data["data_frame"].sort_values(
+                    by=[color_by, metric],
+                    ascending=[True, False]
+                )
 
         fig = plot_f(**plot_data)
         fig.update_layout(
@@ -334,6 +407,17 @@ class AlphaDiversity(MicrobiomePlot):
         color_by: str
     ) -> None:
 
-        print(color_by)
-        print(metric)
-        print(adiv)
+        r = f_oneway(*[
+            vals
+            for group, vals in adiv[
+                metric
+            ].groupby(
+                adiv[color_by]
+            )
+            if group is not None
+        ])
+        return " ".join([
+            "ANOVA:",
+            f"statistic={r.statistic:.2g},",
+            f"p={r.pvalue:.2g}"
+        ])

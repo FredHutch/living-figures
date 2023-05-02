@@ -4,6 +4,8 @@ from living_figures.bio.fom.widgets.microbiome import StHashedDataFrame
 from living_figures.bio.fom.widgets.microbiome import Ordination
 from living_figures.bio.fom.widgets.microbiome import AbundantOrgs
 from living_figures.bio.fom.widgets.microbiome import AlphaDiversity
+from living_figures.bio.fom.widgets.microbiome import BetaDiversity
+from living_figures.bio.fom.widgets.microbiome import DifferentialAbundance
 from living_figures.bio.fom.widgets.microbiome.base_widget import BaseMicrobiomeExplorer # noqa
 import widgets.streamlit as wist
 
@@ -36,6 +38,11 @@ class MicrobiomeExplorer(BaseMicrobiomeExplorer):
             expanded=True,
             children=[
                 MicrobiomeAbund(id="abund"),
+                wist.StDownloadDataFrame(
+                    target="abund",
+                    label="Download Abundances",
+                    index=True
+                ),
                 StHashedDataFrame(
                     id="annots",
                     label="Sample Annotations"
@@ -55,7 +62,9 @@ class MicrobiomeExplorer(BaseMicrobiomeExplorer):
                     options=[
                         AbundantOrgs(id="abundant_orgs"),
                         Ordination(id="ordination"),
-                        AlphaDiversity(id="alpha_diversity")
+                        AlphaDiversity(id="alpha_diversity"),
+                        BetaDiversity(id="beta_diversity"),
+                        DifferentialAbundance(id="differential_abundance")
                     ]
                 ))
                 for i in range(20)
@@ -73,7 +82,10 @@ class MicrobiomeExplorer(BaseMicrobiomeExplorer):
         "import numpy as np",
         "import pandas as pd",
         "from typing import Union, Any, List",
-        "from widgets.base.exceptions import WidgetFunctionException"
+        "from widgets.base.exceptions import WidgetFunctionException",
+        "from living_figures.bio.fom.utilities import parse_taxon_abundances",
+        "from living_figures.bio.fom.widgets.microbiome.base_widget import BaseMicrobiomeExplorer", # noqa
+        "from hashlib import md5"
     ]
 
     def run_self(self):

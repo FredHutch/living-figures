@@ -1,4 +1,5 @@
 import pandas as pd
+import streamlit as st
 
 
 def parse_numeric(df: pd.DataFrame) -> pd.DataFrame:
@@ -13,6 +14,7 @@ def parse_numeric(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+@st.cache_data(max_entries=10)
 def is_numeric(r: pd.Series) -> bool:
     """Whether a column is numeric (after nulls are dropped)."""
 

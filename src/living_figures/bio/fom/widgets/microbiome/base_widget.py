@@ -1,3 +1,4 @@
+import streamlit as st
 from typing import List, Union
 import numpy as np
 import pandas as pd
@@ -21,6 +22,20 @@ class BaseMicrobiomeExplorer(wist.StreamlitWidget):
         # Get the abundances
         abund: pd.DataFrame = self.get(["data", "abund"])
 
+        # Get the sample annotations
+        sample_annots = self.sample_annotations()
+
+        return self._make_abund(abund, sample_annots, level, filter)
+
+    @st.cache_data
+    def _make_abund(
+        _self,
+        abund: pd.DataFrame,
+        sample_annots: pd.DataFrame,
+        level: str,
+        filter: str
+    ) -> pd.DataFrame:
+
         if abund.shape[0] == 0:
             return
 
@@ -33,7 +48,7 @@ class BaseMicrobiomeExplorer(wist.StreamlitWidget):
         else:
 
             # Get the taxonomic information for each row
-            index_orgs = self.get(["data", "abund"], attr="index_orgs")
+            index_orgs = _self.get(["data", "abund"], attr="index_orgs")
 
             # Filter down to the rows which are assigned at that level
             abund = abund.reindex(
@@ -53,9 +68,6 @@ class BaseMicrobiomeExplorer(wist.StreamlitWidget):
 
         # If a filter was specified
         if filter is not None and filter != 'None':
-
-            # Get the sample annotations
-            sample_annots = self.sample_annotations()
 
             # Apply the filter
             query_col, query_val = filter.split(" == ", 1)
@@ -226,7 +238,9 @@ class BaseMicrobiomeExplorer(wist.StreamlitWidget):
         for plot_type in [
             "ordination",
             "abundant_orgs",
-            "alpha_diversity"
+            "alpha_diversity",
+            "beta_diversity",
+            "differential_abundance",
         ]:
 
             # For each of the elements of this type

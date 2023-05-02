@@ -1,7 +1,9 @@
 from hashlib import md5
+from typing import Union
 import widgets.streamlit as wist
 import pandas as pd
-from living_figures.bio.fom.utilities import parse_tax_string
+import streamlit as st
+from living_figures.bio.fom.utilities import parse_taxon_abundances
 
 
 class MicrobiomeAbund(wist.StDataFrame):
@@ -15,40 +17,90 @@ class MicrobiomeAbund(wist.StDataFrame):
         wist.StResource(id='msg')
     ]
 
+    def __init__(
+        self,
+        id="dataframe",
+        value=None,
+        label=None,
+        help: Union[str, None] = None,
+        disabled: bool = False,
+        label_visibility: str = "visible",
+        sidebar=True,
+        show_uploader=True,
+        hash=None,
+        kwargs={}
+    ):
+
+        # Instantiate the hash of the DataFrame
+        self.hash = hash
+
+        super().__init__(
+            id=id,
+            value=value,
+            label=label,
+            help=help,
+            disabled=disabled,
+            label_visibility=label_visibility,
+            sidebar=sidebar,
+            show_uploader=show_uploader,
+            kwargs=kwargs
+        )
+
     def parse_files(self, uploaded_file):
 
         # Read the file
-        self.value: pd.DataFrame = pd.read_csv(
+        df = pd.read_csv(
             uploaded_file,
             index_col=0,
             sep="\t" if "tsv" in uploaded_file.name else ",",
             compression="gzip" if uploaded_file.name.endswith(".gz") else None
         )
-        shape = self.value.shape
-        msg = f"Read {shape[0]:,} rows and {shape[1]:,} columns"
-        self._root().msg(msg)
+
+        # Parse the table of taxonomic abundances
+        self.value, self.index_orgs = self.parse_taxon_abundances(df)
 
         # Compute the hash of the data
         self.hash = md5(self.value.to_csv().encode()).hexdigest()
 
-        # Parse the index column as a taxonomic label
-        self.index_orgs = self.parse_index_orgs()
+        shape = self.value.shape
+        msg = f"Read {shape[0]:,} organisms and {shape[1]:,} samples"
+        self._root().msg(msg)
 
-    def parse_index_orgs(self):
-        """
-        Parse the taxonomic information of the index in the abundance table.
-        """
-
-        return pd.DataFrame([
-            parse_tax_string(org_str)
-            for org_str in self.value.index.values
-        ], index=self.value.index)
+    @st.cache_data(max_entries=10)
+    def parse_taxon_abundances(_self, df):
+        return parse_taxon_abundances(df)
 
 
 class StHashedDataFrame(wist.StDataFrame):
     """Read in a DataFrame and compute a hash."""
 
     hash = None
+
+    def __init__(
+        self,
+        id="dataframe",
+        value=None,
+        label=None,
+        help: Union[str, None] = None,
+        disabled: bool = False,
+        label_visibility: str = "visible",
+        sidebar=True,
+        show_uploader=True,
+        hash=None,
+        kwargs={}
+    ):
+        self.hash = hash
+        super().__init__(
+            id=id,
+            value=value,
+            label=label,
+            help=help,
+            disabled=disabled,
+            label_visibility=label_visibility,
+            kwargs=kwargs,
+            sidebar=sidebar,
+            show_uploader=show_uploader
+        )
 
     def parse_files(self, uploaded_file):
 

@@ -8,6 +8,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import streamlit as st
 
 
 class AbundantOrgs(MicrobiomePlot):
@@ -123,23 +124,27 @@ class AbundantOrgs(MicrobiomePlot):
         wist.StResource(id="legend_display")
     ]
 
-    def get_abundance_data(self):
-
-        # Get the plotting options
-        params = self.all_values(flatten=True)
+    @st.cache_data(max_entries=10)
+    def get_abundance_data(
+        _self,
+        tax_level: str,
+        filter_by: str,
+        n_orgs: int,
+        abund_hash
+    ):
 
         # Get the abundances, filtering to the specified taxonomic level
         # Columns are samples, rows are organisms
-        abund: pd.DataFrame = self._root().abund(
-            level=params['tax_level'],
-            filter=params['filter_by']
+        abund: pd.DataFrame = _self._root().abund(
+            level=tax_level,
+            filter=filter_by
         )
 
         if abund is None:
             return
 
         # If there are no more organisms than the specified max
-        if abund.shape[0] <= params["n_orgs"]:
+        if abund.shape[0] <= n_orgs:
             return abund
 
         # Otherwise, we need to filter down the number of organisms being shown
@@ -147,7 +152,7 @@ class AbundantOrgs(MicrobiomePlot):
         # Compute the average abundance of each organism
         mean_abund = abund.mean(axis=1).sort_values(ascending=False)
 
-        to_keep = mean_abund.index.values[:(params["n_orgs"]-1)]
+        to_keep = mean_abund.index.values[:(n_orgs-1)]
 
         abund = pd.concat([
             abund.reindex(index=to_keep),
@@ -158,45 +163,44 @@ class AbundantOrgs(MicrobiomePlot):
 
         return abund
 
-    def get_plotting_data(self):
-        """Return the data used for plotting, using the cache when possible."""
-
-        # If the cache is populated
-        if self.get_cache(self.make_cache_key()) is not None:
-            # Return the cached data
-            return self.get_cache(self.make_cache_key())
-
-        # If the cache is not populated
+    @st.cache_data(max_entries=10)
+    def get_plotting_data(
+        _self,
+        tax_level,
+        filter_by,
+        n_orgs,
+        color_by,
+        sort_by,
+        abund_hash,
+        annot_hash
+    ):
+        """Return the data used for plotting."""
 
         # Get the abundance data to plot
-        abund_df = self.get_abundance_data()
+        abund_df = _self.get_abundance_data(
+            tax_level,
+            filter_by,
+            n_orgs,
+            abund_hash
+        )
 
         # If there is no abundance data
         if abund_df is None:
-            # Note the lack of data in the cache
-            self.set_cache(self.make_cache_key(), (None, None))
             return None, None
 
         # Get the metadata (if any was provided)
-        sample_annots: pd.DataFrame = self._root().sample_annotations()
-
-        # Get all of the parameters used for plotting
-        params = self.all_values(flatten=True)
+        sample_annots: pd.DataFrame = _self._root().sample_annotations()
 
         # If there is metadata and the user wants to display it
-        if len(params['color_by']) > 0 and sample_annots is not None:
+        if len(color_by) > 0 and sample_annots is not None:
 
             annot_df = sample_annots.reindex(
-                columns=params['color_by'],
+                columns=color_by,
                 index=abund_df.columns.values
             ).dropna()
 
             # If there are no samples with the selected metadata
             if annot_df.shape[0] == 0:
-
-                msg = "No samples available with the selected annotations"
-                self.option("plot_msg").main_empty.warning(msg)
-                self.set_cache(self.make_cache_key(), (None, None))
                 return None, None
 
             # Only keep the abundances which have annotations
@@ -208,13 +212,13 @@ class AbundantOrgs(MicrobiomePlot):
             annot_df = None
 
         # If the user requested to sort samples by organism abundances
-        if params['sort_by'] == "Organism Abundances":
+        if sort_by == "Organism Abundances":
 
             # Sort the abundance table
             abund_df = sort_table(abund_df)
 
         # If the user requested to sort samples by annotations
-        elif params['sort_by'] == "Selected Metadata" and annot_df is not None:
+        elif sort_by == "Selected Metadata" and annot_df is not None:
 
             # Sort the annotation table
             annot_df = annot_df.sort_values(
@@ -228,26 +232,44 @@ class AbundantOrgs(MicrobiomePlot):
         if annot_df is not None:
             annot_df = annot_df.reindex(index=abund_df.columns.values)
 
-        self.set_cache(self.make_cache_key(), (abund_df, annot_df))
         return abund_df, annot_df
 
-    def run_self(self):
+    @st.cache_data(max_entries=10)
+    def make_fig(
+        _self,
+        tax_level,
+        filter_by,
+        n_orgs,
+        color_by,
+        sort_by,
+        annot_size,
+        plot_type,
+        title,
+        abund_hash,
+        annot_hash
+    ):
+        """Make the figure to plot"""
 
         # Get the plotting data
-        abund_df, annot_df = self.get_plotting_data()
+        abund_df, annot_df = _self.get_plotting_data(
+            tax_level,
+            filter_by,
+            n_orgs,
+            color_by,
+            sort_by,
+            abund_hash,
+            annot_hash
+        )
 
         # If there is no data
         if abund_df is None:
             # Don't make a plot
             return
 
-        # Get all of the parameters used for plotting
-        params = self.all_values(flatten=True)
-
         # Set up the size of the annotations
         annot_frac = min(
             0.5,
-            0.02 + (params["annot_size"] * float(len(params["color_by"])))
+            0.02 + (annot_size * float(len(color_by)))
         )
         row_heights = [1 - annot_frac, annot_frac]
 
@@ -263,27 +285,52 @@ class AbundantOrgs(MicrobiomePlot):
         )
 
         # Plot the heatmap / stacked bars
-        fig.add_traces(self.plot_abund(abund_df), rows=1, cols=1)
+        fig.add_traces(_self.plot_abund(abund_df), rows=1, cols=1)
 
-        if params["plot_type"] == "Stacked Bars":
+        if plot_type == "Stacked Bars":
             fig.update_layout(
                 barmode='stack',
                 yaxis_title="Relative Abundance (%)"
             )
 
         # Plot the annotations
-        if len(params['color_by']) > 0 and annot_df is not None:
-            fig.add_trace(self.plot_annot(annot_df), row=2, col=1)
+        if len(color_by) > 0 and annot_df is not None:
+            fig.add_trace(_self.plot_annot(annot_df), row=2, col=1)
 
         # If there is a title
-        if params['title'] is not None and params['title'] != "None":
-            fig.update_layout(title=params['title'])
+        if title is not None and title != "None":
+            fig.update_layout(title=title)
 
-        plot_area = self._get_child("plot")
-        plot_area.main_empty.plotly_chart(
-            fig,
-            use_container_width=True
+        return fig
+
+    def run_self(self):
+
+        # Get the plotting options
+        params = self.all_values(flatten=True)
+
+        # Get the figure to plot
+        fig = self.make_fig(
+            params['tax_level'],
+            params['filter_by'],
+            params['n_orgs'],
+            params['color_by'],
+            params['sort_by'],
+            params['annot_size'],
+            params['plot_type'],
+            params['title'],
+            self._root().abund_hash(),
+            self._root().annot_hash()
         )
+
+        # If there is a figure
+        if fig is not None:
+
+            # Display it in the 'plot' child resource
+            plot_area = self._get_child("plot")
+            plot_area.main_empty.plotly_chart(
+                fig,
+                use_container_width=True
+            )
 
         # If there is a legend
         if params['legend'] is not None:

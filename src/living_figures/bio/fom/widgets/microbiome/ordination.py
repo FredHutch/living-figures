@@ -7,6 +7,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
+import streamlit as st
 from living_figures.helpers.constants import tax_levels
 
 
@@ -81,84 +82,38 @@ class Ordination(MicrobiomePlot):
         wist.StResource(id="legend_display")
     ]
 
-    def make_cache_key(self, val_str: str):
-        """Return a cache key for the plot data."""
-
-        # Get the hash of the input data
-        abund_hash: str = self._root().abund_hash()
-
-        # Set the cache key based on the input data and analysis details
-        cache_key = ":".join(map(
-            str,
-            [
-                abund_hash,
-                self.val('tax_level'),
-                self.val('ord_type'),
-                self.val('3D'),
-                self.val('filter_by'),
-                val_str
-            ]
-        ))
-
-        return cache_key
-
-    def run_ordination(self) -> Union[None, pd.DataFrame]:
+    @st.cache_data(max_entries=10)
+    def run_ordination(
+        _self,
+        tax_level,
+        filter_by,
+        ord_type,
+        abund: pd.DataFrame
+    ) -> Union[None, pd.DataFrame]:
         """Perform ordination on the abundance data."""
-
-        # Get the cache key
-        cache_key = self.make_cache_key("projection")
-
-        # If a value has been computed
-        if self.get_cache(cache_key) is not None:
-
-            # Get the value
-            proj = self.get_cache(cache_key)
-
-            # Return the value
-            if isinstance(proj, str) and proj == "None":
-                return
-            else:
-                return proj
-
-        # The projection needs to be computed
-
-        # Get the plotting options
-        params = self.all_values(flatten=True)
-
-        # Get the abundances, filtering to the specified taxonomic level
-        # Columns are samples, rows are organisms
-        abund: pd.DataFrame = self._root().abund(
-            level=params['tax_level'],
-            filter=params['filter_by']
-        )
 
         # If there are no abundances
         if abund is None:
 
             # Stop
             msg = "No abundances available for ordination"
-            self._get_child("ord_msg").main_empty.write(msg)
-            return
+            return None, None, msg
 
-        msg = f"Running {params['ord_type']} on {abund.shape[1]:,} samples"
+        msg = f"Running {ord_type} on {abund.shape[1]:,} samples"
         msg = f"{msg} using {abund.shape[0]:,}"
-        msg = f"{msg} {params['tax_level']}-level organisms"
-        if params['filter_by'] is not None and params['filter_by'] != 'None':
-            msg = msg + "  \n" + f"Filtering to {params['filter_by']}"
-        self._get_child("ord_msg").main_empty.write(msg)
+        msg = f"{msg} {tax_level}-level organisms"
+        if filter_by is not None and filter_by != 'None':
+            msg = msg + "  \n" + f"Filtering to {filter_by}"
 
-        if params['ord_type'] == 'PCA':
-            proj, loadings = self.run_pca(abund)
-        elif params['ord_type'] == 't-SNE':
-            proj, loadings = self.run_tsne(abund)
+        if ord_type == 'PCA':
+            proj, loadings = _self.run_pca(abund)
+        elif ord_type == 't-SNE':
+            proj, loadings = _self.run_tsne(abund)
         else:
             msg = "Ordination type not recognized"
             raise WidgetFunctionException(msg)
 
-        self.set_cache(cache_key, proj)
-        self.set_cache(self.make_cache_key("loadings"), loadings)
-
-        return self.get_cache(cache_key)
+        return proj, loadings, ""
 
     def run_pca(self, abund: pd.DataFrame):
         """Ordinate data using PCA"""
@@ -214,13 +169,73 @@ class Ordination(MicrobiomePlot):
 
     def run_self(self) -> None:
 
-        # Get the ordinated data
-        plot_df = self.run_ordination()
-        if plot_df is None:
+        # Get all of the plotting parameters
+        params = self.all_values(flatten=True)
+
+        # Get the abundances, filtering to the specified taxonomic level
+        # Columns are samples, rows are organisms
+        abund: pd.DataFrame = self._root().abund(
+            level=params["tax_level"],
+            filter=params["filter_by"]
+        )
+
+        # Get the sample annotations
+        sample_annots = self._root().sample_annotations()
+
+        fig, msg = self.build_fig(
+            params["tax_level"],
+            params["filter_by"],
+            params["ord_type"],
+            abund,
+            sample_annots,
+            params["3D"],
+            params["color_by"],
+            params["title"],
+            params["pca_loadings"],
+        )
+
+        if msg is not None and len(msg) > 0:
+            self._get_child("ord_msg").main_empty.write(msg)
+        if fig is None:
             return
 
+        # Add the plot to the display
+        self._get_child("plot").main_empty.plotly_chart(fig)
+
+        # If there is a legend
+        if params['legend'] is not None:
+            self._get_child(
+                "legend_display"
+            ).main_empty.markdown(
+                params['legend']
+            )
+
+    @st.cache_data(max_entries=10)
+    def build_fig(
+        _self,
+        tax_level,
+        filter_by,
+        ord_type,
+        abund,
+        sample_annots,
+        is_3d,
+        color_by,
+        title,
+        pca_loadings
+    ):
+
+        # Get the ordinated data
+        plot_df, loadings, msg = _self.run_ordination(
+            tax_level,
+            filter_by,
+            ord_type,
+            abund
+        )
+
+        if plot_df is None:
+            return None, msg
+
         # Add the metadata (if any was provided)
-        sample_annots = self._root().sample_annotations()
         if sample_annots is not None:
             plot_df = plot_df.merge(
                 sample_annots,
@@ -229,20 +244,29 @@ class Ordination(MicrobiomePlot):
             )
 
         # Get the coloring column
-        color_by = self.val("color_by")
         if color_by == 'None':
             color_by = None
 
         # Set up the data which will be used to build the plot
         plot_kwargs = dict(
-            data_frame=plot_df,
+            data_frame=plot_df.reset_index(
+            ).rename(
+                columns=dict(index="sample")
+            ),
             x=plot_df.columns.values[0],
             y=plot_df.columns.values[1],
+            hover_data=[
+                plot_df.columns.values[0],
+                plot_df.columns.values[1],
+                "sample"
+            ],
             color=color_by
         )
+        if color_by is not None:
+            plot_kwargs["hover_data"].append(color_by)
 
         # If the 3D plot was requested
-        if self.val("3D"):
+        if is_3d:
             plot_f = px.scatter_3d
             plot_kwargs['z'] = plot_df.columns.values[2]
         else:
@@ -252,46 +276,34 @@ class Ordination(MicrobiomePlot):
         fig = plot_f(**plot_kwargs)
 
         # Add the PCA loadings, if requested
-        self.add_pca_loadings(fig, plot_df)
+        if pca_loadings:
+            _self.add_pca_loadings(
+                fig,
+                plot_df,
+                loadings,
+                is_3d
+            )
 
         # If there is a title
-        title = self.val("title")
         if title is not None and title != "None":
             fig.update_layout(title=title)
 
-        # Add the plot to the display
-        self._get_child("plot").main_empty.plotly_chart(fig)
+        return fig, msg
 
-        # If there is a legend
-        legend = self.val("legend")
-        if legend is not None:
-            self._get_child(
-                "legend_display"
-            ).main_empty.markdown(legend)
-
-    def add_pca_loadings(self, fig, plot_df):
-
-        if not self.val("pca_loadings"):
-            return
-
-        # Get the key used in the cache for the loadings
-        cache_key = self.make_cache_key("loadings")
-
-        # If there is no value in the cache
-        if self.get_cache(cache_key) is None:
-            # Run the ordination to make sure that the cache
-            # is current
-            _ = self.run_ordination()
-
-        # Get any value in the cache
-        loadings = self.get_cache(cache_key)
+    def add_pca_loadings(
+        self,
+        fig,
+        plot_df,
+        loadings,
+        is_3d
+    ):
 
         # If no value has been computed
         if loadings is None:
             return
 
         # Number of dimensions
-        ndims = 2 + self.val("3D")
+        ndims = 2 + is_3d
 
         # Just pick the number of axes used in the plot
         loadings = loadings.head(ndims)
