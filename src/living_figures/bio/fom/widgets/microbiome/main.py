@@ -74,8 +74,9 @@ class MicrobiomeExplorer(BaseMicrobiomeExplorer):
     ]
 
     requirements = [
-        "living-figures"
+        "living-figures", "statsmodels"
     ]
+    pyodide_requirements = ["statsmodels"]
 
     extra_imports = [
         "from living_figures.helpers import parse_numeric, is_numeric",
