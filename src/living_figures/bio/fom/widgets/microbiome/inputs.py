@@ -3,6 +3,7 @@ from typing import Union
 import widgets.streamlit as wist
 import pandas as pd
 import streamlit as st
+from widgets.base.helpers import parse_dataframe_string
 from living_figures.bio.fom.utilities import parse_taxon_abundances
 
 
@@ -34,7 +35,7 @@ class MicrobiomeAbund(wist.StDataFrame):
 
         # Instantiate the custom elements of the DataFrame
         self.hash = hash
-        self.index_orgs = index_orgs
+        self.index_orgs = parse_dataframe_string(index_orgs)
 
         super().__init__(
             id=id,
