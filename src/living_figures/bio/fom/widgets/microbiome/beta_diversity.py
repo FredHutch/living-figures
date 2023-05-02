@@ -27,7 +27,11 @@ class BetaDiversity(MicrobiomePlot):
                         wist.StSelectString(
                             id='metric',
                             label="Distance Metric",
-                            options=['Bray-Curtis', 'Euclidean', 'Jensen-Shannon'],
+                            options=[
+                                'Bray-Curtis',
+                                'Euclidean',
+                                'Jensen-Shannon'
+                            ],
                             value='Bray-Curtis'
                         ),
                         wist.StSelectString(
