@@ -28,11 +28,13 @@ class MicrobiomeAbund(wist.StDataFrame):
         sidebar=True,
         show_uploader=True,
         hash=None,
+        index_orgs=None,
         kwargs={}
     ):
 
-        # Instantiate the hash of the DataFrame
+        # Instantiate the custom elements of the DataFrame
         self.hash = hash
+        self.index_orgs = index_orgs
 
         super().__init__(
             id=id,
