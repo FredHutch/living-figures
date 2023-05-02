@@ -253,14 +253,9 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
         else:
 
             # See if any of the options are missing
-            missing_options = [
-                option
-                for option in df.reindex(
-                    columns=['id']
-                ).dropna(
-                )['id'].drop_duplicates().tolist()
-                if option not in all_options
-            ]
+            missing_options = list(
+                set(all_options) - set(df['id'].dropna().tolist())
+            )
 
             # If no options are missing, we're done
             if len(missing_options) == 0:
@@ -301,6 +296,12 @@ class PanEpiGenomeBrowser(wist.StreamlitWidget):
         docs_url = "https://living-figures.com/post/panepigenome-browser/"
         self.sidebar_container.markdown(
             f"[Pan-Epigenome Browser Documentation]({docs_url})"
+        )
+
+        # Link to the online issues
+        bugs_url = "https://github.com/FredHutch/living-figures/issues"
+        self.sidebar_container.markdown(
+            f"[Report Bugs]({bugs_url})"
         )
 
     def update_annotation_selectors(self):
