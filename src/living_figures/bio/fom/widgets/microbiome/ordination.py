@@ -88,7 +88,8 @@ class Ordination(MicrobiomePlot):
         tax_level,
         filter_by,
         ord_type,
-        abund: pd.DataFrame
+        abund: pd.DataFrame,
+        is_3d: bool
     ) -> Union[None, pd.DataFrame]:
         """Perform ordination on the abundance data."""
 
@@ -108,7 +109,7 @@ class Ordination(MicrobiomePlot):
         if ord_type == 'PCA':
             proj, loadings = _self.run_pca(abund)
         elif ord_type == 't-SNE':
-            proj, loadings = _self.run_tsne(abund)
+            proj, loadings = _self.run_tsne(abund, is_3d)
         else:
             msg = "Ordination type not recognized"
             raise WidgetFunctionException(msg)
@@ -146,11 +147,11 @@ class Ordination(MicrobiomePlot):
 
         return coords, loadings
 
-    def run_tsne(self, abund: pd.DataFrame):
+    def run_tsne(self, abund: pd.DataFrame, is_3d: bool):
         """Ordinate data using t-SNE"""
 
         tsne = TSNE(
-            n_components=3 if self.val("3D") else 2
+            n_components=3 if is_3d else 2
         )
         ord_mat = tsne.fit_transform(abund.T)
         coords = pd.DataFrame(
@@ -229,7 +230,8 @@ class Ordination(MicrobiomePlot):
             tax_level,
             filter_by,
             ord_type,
-            abund
+            abund,
+            is_3d
         )
 
         if plot_df is None:
@@ -269,6 +271,9 @@ class Ordination(MicrobiomePlot):
         if is_3d:
             plot_f = px.scatter_3d
             plot_kwargs['z'] = plot_df.columns.values[2]
+            plot_kwargs['hover_data'].insert(
+                2, plot_df.columns.values[2]
+            )
         else:
             plot_f = px.scatter
 

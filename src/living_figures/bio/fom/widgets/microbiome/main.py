@@ -79,7 +79,11 @@ class MicrobiomeExplorer(BaseMicrobiomeExplorer):
     pyodide_requirements = ["statsmodels"]
 
     extra_imports = [
+        "from scipy.spatial import distance",
+        "from scipy import stats",
+        "from scipy.stats import entropy, spearmanr, pearsonr, f_oneway",
         "from living_figures.helpers import parse_numeric, is_numeric",
+        "from statsmodels.stats.multitest import multipletests",
         "import numpy as np",
         "import pandas as pd",
         "from plotly.subplots import make_subplots",
@@ -88,10 +92,13 @@ class MicrobiomeExplorer(BaseMicrobiomeExplorer):
         "from typing import Union, Any, List",
         "from widgets.base.exceptions import WidgetFunctionException",
         "from widgets.base.helpers import parse_dataframe_string",
+        "from living_figures.helpers.scaling import convert_text_to_scalar",
         "from living_figures.helpers.sorting import sort_table",
         "from living_figures.bio.fom.utilities import parse_taxon_abundances",
         "from living_figures.bio.fom.widgets.microbiome.base_widget import BaseMicrobiomeExplorer", # noqa
-        "from hashlib import md5"
+        "from hashlib import md5",
+        "from sklearn.decomposition import PCA",
+        "from sklearn.manifold import TSNE"
     ]
 
     def run_self(self):

@@ -55,6 +55,7 @@ class MicrobiomeAbund(wist.StDataFrame):
         df = pd.read_csv(
             uploaded_file,
             index_col=0,
+            comment="#",
             sep="\t" if "tsv" in uploaded_file.name else ",",
             compression="gzip" if uploaded_file.name.endswith(".gz") else None
         )

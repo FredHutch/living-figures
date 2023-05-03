@@ -230,7 +230,7 @@ class DifferentialAbundance(MicrobiomePlot):
         r = spearmanr(org_abund.values, meta.values)
 
         return {
-            "Test Statistic": r.statistic,
+            "Test Statistic": r.correlation,
             "p-value": r.pvalue,
             "Mean Abundance": org_abund.mean()
         }

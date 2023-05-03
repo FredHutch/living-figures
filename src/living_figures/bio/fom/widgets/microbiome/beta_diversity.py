@@ -19,7 +19,6 @@ class BetaDiversity(MicrobiomePlot):
     children = [
         wist.StExpander(
             id="options",
-            expanded=True,
             children=[
                 wist.StColumns(
                     id="row1",
@@ -129,6 +128,15 @@ class BetaDiversity(MicrobiomePlot):
                     ),
                     axis=1
                 )
+                if comparison_values.apply(
+                    lambda v: v in [0., 1.]
+                ).all():
+                    comparison_values = comparison_values.apply(
+                        {
+                            0.: "Same",
+                            1.: "Different"
+                        }.get
+                    )
             else:
                 comparison_values = dm.apply(
                     lambda r: _self.label_meta(
@@ -312,45 +320,45 @@ class BetaDiversity(MicrobiomePlot):
             sample_annots,
             color_by,
             metric
-        )
+        ).dropna()
 
         # Set up the data which will be used to build the plot
         plot_data = dict(
             data_frame=plot_df,
-            x="value",
+            y="value",
             nbins=nbins
         )
         plot_f = px.histogram
         layout = dict(
-            xaxis_title=f"{metric} Distance",
-            yaxis_title="Num. Comparisons",
+            xaxis_title="Num. Comparisons",
+            yaxis_title=f"{metric} Distance"
         )
 
         # If a comparison was selected
         if color_by is not None:
 
             # If the value is numeric
-            if is_numeric(sample_annots[color_by]):
+            if is_numeric(plot_df[color_by]):
                 # Make a scatterplot
                 plot_f = px.scatter
-                # With the y-axis as the metadata
-                plot_data["y"] = color_by
-                # Label the y axis
-                layout["yaxis_title"] = color_by
+                # With the x-axis as the metadata
+                plot_data["x"] = color_by
+                # Label the x axis
+                layout["xaxis_title"] = color_by
                 # Add a marginal histogram
-                plot_data["marginal_x"] = "histogram"
+                plot_data["marginal_y"] = "histogram"
                 del plot_data["nbins"]
 
             # If the value is categorical
             else:
-                # Make a facet row
-                plot_data["facet_row"] = color_by
+                # Make a facet column
+                plot_data["facet_col"] = color_by
 
                 # Add the yaxis title for all subplots
                 for i in range(
                     plot_data["data_frame"][color_by].unique().shape[0]
                 ):
-                    axis_name = 'yaxis' if i == 0 else f'yaxis{i+1}'
+                    axis_name = 'xaxis' if i == 0 else f'xaxis{i+1}'
                     if axis_name not in layout:
                         layout[axis_name] = dict()
                     layout[axis_name]['title'] = ""
@@ -358,6 +366,9 @@ class BetaDiversity(MicrobiomePlot):
         # Make a plot
         fig = plot_f(**plot_data)
         fig.update_layout(**layout)
+
+        if plot_data.get("facet_col") is not None:
+            fig.update_xaxes(matches=None)
 
         if color_by is not None:
             fig.for_each_annotation(

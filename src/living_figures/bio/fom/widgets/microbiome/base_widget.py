@@ -70,10 +70,16 @@ class BaseMicrobiomeExplorer(wist.StreamlitWidget):
         if filter is not None and filter != 'None':
 
             # Apply the filter
-            query_col, query_val = filter.split(" == ", 1)
-            sample_annots = sample_annots.loc[
-                sample_annots[query_col].apply(str) == query_val
-            ]
+            if " == " in filter:
+                query_col, query_val = filter.split(" == ", 1)
+                sample_annots = sample_annots.loc[
+                    sample_annots[query_col].apply(str) == query_val
+                ]
+            else:
+                query_col, query_val = filter.split(" != ", 1)
+                sample_annots = sample_annots.loc[
+                    sample_annots[query_col].apply(str) != query_val.strip("'")
+                ]
             filtered_samples = set(list(sample_annots.index.values))
 
             # Subset the abundances to that set of samples
@@ -190,9 +196,10 @@ class BaseMicrobiomeExplorer(wist.StreamlitWidget):
                 else:
                     filter_val = str(uval)
 
-                filters.append(
-                    f"{cname} == {filter_val}"
-                )
+                filters.extend([
+                    f"{cname} == {filter_val}",
+                    f"{cname} != {filter_val}"
+                ])
 
         return filters
 
