@@ -73,7 +73,7 @@ class BaseMicrobiomeExplorer(wist.StreamlitWidget):
             if " == " in filter:
                 query_col, query_val = filter.split(" == ", 1)
                 sample_annots = sample_annots.loc[
-                    sample_annots[query_col].apply(str) == query_val
+                    sample_annots[query_col].apply(str) == query_val.strip("'")
                 ]
             else:
                 query_col, query_val = filter.split(" != ", 1)
