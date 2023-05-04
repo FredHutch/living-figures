@@ -25,6 +25,15 @@ class MicrobiomePlot(wist.StResource):
         # Get the resource by ID
         resource = self.option(id)
 
+        # Remove any values which are not in the new options
+        value = resource.get_value()
+        if isinstance(value, list):
+            value = [i for i in value if i in options]
+        else:
+            value = value if value in options else None
+        if value != resource.get_value():
+            resource.set(value=value, update=False)
+
         # If the options do not already match
         if resource.get_attr("options") != options:
 

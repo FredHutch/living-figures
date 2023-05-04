@@ -3,6 +3,7 @@ from typing import Union
 import widgets.streamlit as wist
 import pandas as pd
 import streamlit as st
+from widgets.base.helpers import parse_dataframe_string
 from living_figures.bio.fom.utilities import parse_taxon_abundances
 
 
@@ -28,11 +29,13 @@ class MicrobiomeAbund(wist.StDataFrame):
         sidebar=True,
         show_uploader=True,
         hash=None,
+        index_orgs=None,
         kwargs={}
     ):
 
-        # Instantiate the hash of the DataFrame
+        # Instantiate the custom elements of the DataFrame
         self.hash = hash
+        self.index_orgs = parse_dataframe_string(index_orgs)
 
         super().__init__(
             id=id,
@@ -52,6 +55,7 @@ class MicrobiomeAbund(wist.StDataFrame):
         df = pd.read_csv(
             uploaded_file,
             index_col=0,
+            comment="#",
             sep="\t" if "tsv" in uploaded_file.name else ",",
             compression="gzip" if uploaded_file.name.endswith(".gz") else None
         )
