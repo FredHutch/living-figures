@@ -16,7 +16,7 @@ These apps give you the ability to interact with data in complex ways directly i
 having to install anything on your computer.
 
 **Easily save your work**  
-After you've tweaked your visualization settings, or uploaded your own data, you can easily save a copy of your work as a new file.  
+After you've tweaked your visualization settings, or uploaded your own data, you can easily save (or 'clone') a copy of your work as a new file.  
 When you open that file, the app will launch with all of your changes saved.
 
 **Why does it take so long to load?**  
@@ -25,10 +25,14 @@ Python is one of the most commonly used programming languages by researchers. It
 
 **Living figures are free and open**  
 By running entirely inside your web browser, living figures don't require any servers or subscriptions.  
-You can send a living figure to anyone, and be reasonably sure it will start right up in their web browser.
+You can send a living figure to anyone, and be reasonably sure it will start right up in their web browser (we test in Chrome).  
 
 **You can make your own living figures**  
 All of the living figures on this website can be found at [github.com/FredHutch/living-figures](https://github.com/FredHutch/living-figures) along with the code used to render the website itself.  
 The Python library used to create living figures can be found at [github.com/FredHutch/widgets](https://github.com/FredHutch/widgets).  
 By following some of the examples here, it should be possible to turn your visualization into a living figure.  
 If you'd like to share it with others directly on this website, please [be in touch](https://github.com/FredHutch/living-figures/issues).
+
+[![PyPI version](https://badge.fury.io/py/living-figures.svg)](https://pypi.org/project/living-figures/)
+
+[![Docker Repository on Quay](https://quay.io/repository/hdc-workflows/living-figures/status "Docker Repository on Quay")](https://quay.io/repository/hdc-workflows/living-figures)

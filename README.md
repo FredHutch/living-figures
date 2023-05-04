@@ -1,6 +1,10 @@
 # Living Figures
 Collection of useful interactive data widgets
 
+[![PyPI version](https://badge.fury.io/py/living-figures.svg)](https://pypi.org/project/living-figures/)
+
+[![Docker Repository on Quay](https://quay.io/repository/hdc-workflows/living-figures/status "Docker Repository on Quay")](https://quay.io/repository/hdc-workflows/living-figures)
+
 ## Widgets
 
 The interactive data widgets provided in this repository have been
