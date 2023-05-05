@@ -12,7 +12,8 @@ class BaseMicrobiomeExplorer(wist.StreamlitWidget):
 
     def msg(self, msg):
         """Write to the message container."""
-        self.main_container.write(msg)
+        if self.main_container is not None:
+            self.main_container.write(msg)
 
     def abund(self, level=None, filter='None') -> pd.DataFrame:
         """
