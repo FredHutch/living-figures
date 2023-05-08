@@ -344,7 +344,7 @@ class Ordination(MicrobiomePlot):
                 mode='lines',
                 name=org_name
             )
-            if self.val("3D"):
+            if is_3d:
                 line_props['z'] = [0, org_coords.values[2]]
                 trace_f = go.Scatter3d
             else:

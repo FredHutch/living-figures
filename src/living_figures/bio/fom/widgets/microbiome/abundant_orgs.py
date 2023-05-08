@@ -246,7 +246,9 @@ class AbundantOrgs(MicrobiomePlot):
         plot_type,
         title,
         abund_hash,
-        annot_hash
+        annot_hash,
+        annot_cpal,
+        heatmap_cpal
     ):
         """Make the figure to plot"""
 
@@ -285,7 +287,15 @@ class AbundantOrgs(MicrobiomePlot):
         )
 
         # Plot the heatmap / stacked bars
-        fig.add_traces(_self.plot_abund(abund_df), rows=1, cols=1)
+        fig.add_traces(
+            _self.plot_abund(
+                plot_type,
+                abund_df,
+                heatmap_cpal
+            ),
+            rows=1,
+            cols=1
+        )
 
         if plot_type == "Stacked Bars":
             fig.update_layout(
@@ -295,7 +305,14 @@ class AbundantOrgs(MicrobiomePlot):
 
         # Plot the annotations
         if len(color_by) > 0 and annot_df is not None:
-            fig.add_trace(_self.plot_annot(annot_df), row=2, col=1)
+            fig.add_trace(
+                _self.plot_annot(
+                    annot_df,
+                    annot_cpal
+                ),
+                row=2,
+                col=1
+            )
 
         # If there is a title
         if title is not None and title != "None":
@@ -319,7 +336,9 @@ class AbundantOrgs(MicrobiomePlot):
             params['plot_type'],
             params['title'],
             self._root().abund_hash(),
-            self._root().annot_hash()
+            self._root().annot_hash(),
+            params["annot_cpal"],
+            params["heatmap_cpal"]
         )
 
         # If there is a figure
@@ -340,17 +359,14 @@ class AbundantOrgs(MicrobiomePlot):
                 params['legend']
             )
 
-    def plot_abund(self, abund_df):
+    def plot_abund(self, plot_type, abund_df, heatmap_cpal):
 
-        if self.val("plot_type") == "Heatmap":
-            return self.plot_heatmap(abund_df)
+        if plot_type == "Heatmap":
+            return self.plot_heatmap(abund_df, heatmap_cpal)
         else:
             return self.plot_bars(abund_df)
 
-    def plot_heatmap(self, abund_df: pd.DataFrame):
-
-        # Color scale used for the heatmap
-        colorscale = self.val("heatmap_cpal")
+    def plot_heatmap(self, abund_df: pd.DataFrame, colorscale: str):
 
         # Mouseover text
         text_df = abund_df.apply(
@@ -387,7 +403,7 @@ class AbundantOrgs(MicrobiomePlot):
             for org_name, org_abund in abund_df.iterrows()
         ]
 
-    def plot_annot(self, annot_df):
+    def plot_annot(self, annot_df, annot_cpal):
 
         # Capture the annotations as text
         text_df = annot_df.applymap(
@@ -409,7 +425,7 @@ class AbundantOrgs(MicrobiomePlot):
             x=annot_df.index.values,
             y=annot_df.columns.values,
             z=annot_df.T.values,
-            colorscale=self.option("annot_cpal").get_value(),
+            colorscale=annot_cpal,
             text=text_df.T.values,
             hoverinfo="text",
             showscale=False,
