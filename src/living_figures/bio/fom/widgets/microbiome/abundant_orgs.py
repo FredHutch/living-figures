@@ -130,7 +130,8 @@ class AbundantOrgs(MicrobiomePlot):
         tax_level: str,
         filter_by: str,
         n_orgs: int,
-        abund_hash
+        abund_hash,
+        annot_hash
     ):
 
         # Get the abundances, filtering to the specified taxonomic level
@@ -181,7 +182,8 @@ class AbundantOrgs(MicrobiomePlot):
             tax_level,
             filter_by,
             n_orgs,
-            abund_hash
+            abund_hash,
+            annot_hash
         )
 
         # If there is no abundance data

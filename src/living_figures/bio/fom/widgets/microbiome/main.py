@@ -6,6 +6,7 @@ from living_figures.bio.fom.widgets.microbiome import AbundantOrgs
 from living_figures.bio.fom.widgets.microbiome import AlphaDiversity
 from living_figures.bio.fom.widgets.microbiome import BetaDiversity
 from living_figures.bio.fom.widgets.microbiome import DifferentialAbundance
+from living_figures.bio.fom.widgets.microbiome import SingleOrganism
 from living_figures.bio.fom.widgets.microbiome.base_widget import BaseMicrobiomeExplorer # noqa
 import widgets.streamlit as wist
 
@@ -64,7 +65,8 @@ class MicrobiomeExplorer(BaseMicrobiomeExplorer):
                         Ordination(id="ordination"),
                         AlphaDiversity(id="alpha_diversity"),
                         BetaDiversity(id="beta_diversity"),
-                        DifferentialAbundance(id="differential_abundance")
+                        DifferentialAbundance(id="differential_abundance"),
+                        SingleOrganism(id="single_organism")
                     ]
                 ))
                 for i in range(20)

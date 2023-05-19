@@ -28,6 +28,24 @@ class BaseMicrobiomeExplorer(wist.StreamlitWidget):
 
         return self._make_abund(abund, sample_annots, level, filter)
 
+    def org_list(self):
+        """Return the list of organisms parsed from the abundance table."""
+
+        return self._make_org_list(
+            self.get(
+                ['data', 'abund'],
+                attr="index_orgs"
+            )
+        )
+
+    @st.cache_data
+    def _make_org_list(_self, index_orgs: pd.DataFrame):
+        return [
+            f"{r['level']}: {r['name']}"
+            for _, r in index_orgs.iterrows()
+            if not pd.isnull(r['level'])
+        ]
+
     @st.cache_data
     def _make_abund(
         _self,
@@ -242,13 +260,14 @@ class BaseMicrobiomeExplorer(wist.StreamlitWidget):
     def update_options(self) -> None:
         """Update the menu selection items based on the user inputs."""
 
-        # Update the Ordination and Abundant Organism plots
+        # Update the color_by and filter_by fields of all appropriate elements
         for plot_type in [
             "ordination",
             "abundant_orgs",
             "alpha_diversity",
             "beta_diversity",
             "differential_abundance",
+            "single_organism",
         ]:
 
             # For each of the elements of this type
@@ -266,3 +285,17 @@ class BaseMicrobiomeExplorer(wist.StreamlitWidget):
                 )
                 # Update the filter_by for all plot types
                 plot_elem.update_options(self.sample_filters(), "filter_by")
+
+        # Update the organism list
+        for plot_type in [
+            "single_organism"
+        ]:
+
+            # For each of the elements of this type
+            for plot_elem in self._find_child(plot_type):
+
+                # Update the 'org' selector
+                plot_elem.update_options(
+                    self.org_list(),
+                    "org"
+                )
