@@ -170,7 +170,7 @@ class CompareTwoOrganisms(MicrobiomePlot):
         annot_hash
     ):
 
-        # The `org` contains the rank and the name
+        # The 'org' contains the rank and the name
         rank, name = org.split(": ", 1)
 
         # Get the abundance data for that rank
