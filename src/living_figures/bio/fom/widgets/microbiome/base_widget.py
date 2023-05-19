@@ -268,6 +268,7 @@ class BaseMicrobiomeExplorer(wist.StreamlitWidget):
             "beta_diversity",
             "differential_abundance",
             "single_organism",
+            "compare_two_organisms",
         ]:
 
             # For each of the elements of this type
@@ -287,8 +288,10 @@ class BaseMicrobiomeExplorer(wist.StreamlitWidget):
                 plot_elem.update_options(self.sample_filters(), "filter_by")
 
         # Update the organism list
-        for plot_type in [
-            "single_organism"
+        for plot_type, menu_name in [
+            ("single_organism", "org"),
+            ("compare_two_organisms", "org1"),
+            ("compare_two_organisms", "org2"),
         ]:
 
             # For each of the elements of this type
@@ -297,5 +300,5 @@ class BaseMicrobiomeExplorer(wist.StreamlitWidget):
                 # Update the 'org' selector
                 plot_elem.update_options(
                     self.org_list(),
-                    "org"
+                    menu_name
                 )

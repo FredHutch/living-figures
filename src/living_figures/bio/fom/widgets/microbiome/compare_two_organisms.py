@@ -5,12 +5,12 @@ import pandas as pd
 import plotly.express as px
 
 
-class SingleOrganism(MicrobiomePlot):
+class CompareTwoOrganisms(MicrobiomePlot):
     """
-    Plot the relative abundance of a single organism across samples.
+    Compare the relative abundance of two organisms across samples.
     """
 
-    label = "Single Organism"
+    label = "Compare Two Organisms"
 
     children = [
         wist.StExpander(
@@ -20,14 +20,14 @@ class SingleOrganism(MicrobiomePlot):
                     id="row1",
                     children=[
                         wist.StSelectString(
-                            id='org',
-                            label="Organism",
+                            id='org1',
+                            label="Organism 1",
                             options=[]
                         ),
                         wist.StSelectString(
-                            id='plot_type',
-                            label="Plot Type",
-                            options=['Box', 'Scatter']
+                            id='org2',
+                            label="Organism 2",
+                            options=[]
                         )
                     ]
                 ),
@@ -36,7 +36,7 @@ class SingleOrganism(MicrobiomePlot):
                     children=[
                         wist.StSelectString(
                             id="color_by",
-                            label="Compare Samples By",
+                            label="Color Samples By",
                             options=[]
                         ),
                         wist.StSelectString(
@@ -98,8 +98,8 @@ class SingleOrganism(MicrobiomePlot):
     @st.cache_data(max_entries=10)
     def make_fig(
         _self,
-        org,
-        plot_type,
+        org1,
+        org2,
         color_by,
         filter_by,
         log,
@@ -109,12 +109,10 @@ class SingleOrganism(MicrobiomePlot):
         annot_hash
     ):
 
-        if color_by is None or color_by == 'None':
-            return
-
         # Get the plotting data
         plot_df = _self.get_plotting_data(
-            org,
+            org1,
+            org2,
             color_by,
             filter_by,
             abund_hash,
@@ -127,36 +125,35 @@ class SingleOrganism(MicrobiomePlot):
         # If the log-transform was specified
         if log:
 
-            # If all values are 0, take no action
-            if plot_df["_ABUND"].max() == 0:
-                return
+            for kw in ['_ABUND_1', '_ABUND_2']:
 
-            # Find the lowest non-zero value
-            lower_bound = plot_df.loc[plot_df["_ABUND"] > 0, "_ABUND"].min()
+                # If all values are 0, take no action
+                if plot_df[kw].max() == 0:
+                    return
 
-            # Set the floor so that the log renders appropriately
-            plot_df = plot_df.assign(
-                _ABUND=plot_df["_ABUND"].clip(
-                    lower=lower_bound
+                # Find the lowest non-zero value
+                lower_bound = plot_df.loc[plot_df[kw] > 0, kw].min()
+
+                # Set the floor so that the log renders appropriately
+                plot_df = plot_df.assign(
+                    _ABUND=plot_df[kw].clip(
+                        lower=lower_bound
+                    )
                 )
-            )
 
-        if plot_type == 'Box':
-            plot_f = px.box
-
-        elif plot_type == 'Scatter':
-            plot_f = px.scatter
-
-        else:
-            assert False, f"Did not recognize plot type: {plot_type}"
-
-        fig = plot_f(
-            plot_df,
-            x=color_by,
-            y='_ABUND',
+        fig = px.scatter(
+            plot_df.reset_index(),
+            x="_ABUND_1",
+            y="_ABUND_2",
+            log_x=log,
             log_y=log,
             height=height,
-            labels=dict(_ABUND=org.replace("_", " "))
+            labels=dict(
+                _ABUND_1=org1.replace("_", " "),
+                _ABUND_2=org2.replace("_", " ")
+            ),
+            color=color_by if color_by != 'None' else None,
+            hover_name="index"
         )
 
         # If there is a title
@@ -164,34 +161,6 @@ class SingleOrganism(MicrobiomePlot):
             fig.update_layout(title=title)
 
         return fig
-
-    @st.cache_data(max_entries=10)
-    def get_plotting_data(
-        _self,
-        org,
-        color_by,
-        filter_by,
-        abund_hash,
-        annot_hash
-    ):
-        
-        # Get the abundances of the organism
-        org_abund = _self.get_org_abund(org, filter_by, abund_hash, annot_hash)
-
-        if org_abund is None:
-            return
-
-        # Get the metadata (if any was provided)
-        sample_annots: pd.DataFrame = _self._root().sample_annotations()
-        if sample_annots is None:
-            return
-
-        # Add the organism abundance as a column to the sample annotations
-        return sample_annots.reindex(
-            index=org_abund.index
-        ).assign(
-            _ABUND=org_abund
-        )
 
     def get_org_abund(
         _self,
@@ -216,19 +185,65 @@ class SingleOrganism(MicrobiomePlot):
 
         return rank_abund.loc[name]
 
+    @st.cache_data(max_entries=10)
+    def get_plotting_data(
+        _self,
+        org1,
+        org2,
+        color_by,
+        filter_by,
+        abund_hash,
+        annot_hash
+    ):
+
+        # Get the abundances
+        org1_abund = _self.get_org_abund(
+            org1,
+            filter_by,
+            abund_hash,
+            annot_hash
+        )
+        if org1_abund is None:
+            return
+        org2_abund = _self.get_org_abund(
+            org2,
+            filter_by,
+            abund_hash,
+            annot_hash
+        )
+        if org2_abund is None:
+            return
+
+        # Get the metadata (if any was provided)
+        sample_annots: pd.DataFrame = _self._root().sample_annotations()
+        if sample_annots is None:
+            return pd.DataFrame(dict(
+                _ABUND_1=org1_abund,
+                _ABUND_2=org2_abund
+            ))
+
+        # Add the organism abundance as a column to the sample annotations
+        return sample_annots.reindex(
+            index=org1_abund.index
+        ).assign(
+            _ABUND_1=org1_abund,
+            _ABUND_2=org2_abund
+        )
+
     def run_self(self):
 
         # Get all of the ploting parameters
         params = self.all_values(flatten=True)
 
         # If no organism is selected, take no action
-        if params['org'] is None or params['org'] == 'None':
-            return
+        for kw in ['org1', 'org2']:
+            if params[kw] is None or params[kw] == 'None':
+                return
 
         # Get the figure to plot
         fig = self.make_fig(
-            params['org'],
-            params['plot_type'],
+            params['org1'],
+            params['org2'],
             params['color_by'],
             params['filter_by'],
             params['log'],
