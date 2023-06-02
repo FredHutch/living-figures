@@ -12,7 +12,8 @@ class BaseMicrobiomeExplorer(wist.StreamlitWidget):
 
     def msg(self, msg):
         """Write to the message container."""
-        self.main_container.write(msg)
+        if self.main_container is not None:
+            self.main_container.write(msg)
 
     def abund(self, level=None, filter='None') -> pd.DataFrame:
         """
@@ -26,6 +27,24 @@ class BaseMicrobiomeExplorer(wist.StreamlitWidget):
         sample_annots = self.sample_annotations()
 
         return self._make_abund(abund, sample_annots, level, filter)
+
+    def org_list(self):
+        """Return the list of organisms parsed from the abundance table."""
+
+        return self._make_org_list(
+            self.get(
+                ['data', 'abund'],
+                attr="index_orgs"
+            )
+        )
+
+    @st.cache_data
+    def _make_org_list(_self, index_orgs: pd.DataFrame):
+        return [
+            f"{r['level']}: {r['name']}"
+            for _, r in index_orgs.iterrows()
+            if not pd.isnull(r['level'])
+        ]
 
     @st.cache_data
     def _make_abund(
@@ -73,7 +92,7 @@ class BaseMicrobiomeExplorer(wist.StreamlitWidget):
             if " == " in filter:
                 query_col, query_val = filter.split(" == ", 1)
                 sample_annots = sample_annots.loc[
-                    sample_annots[query_col].apply(str) == query_val
+                    sample_annots[query_col].apply(str) == query_val.strip("'")
                 ]
             else:
                 query_col, query_val = filter.split(" != ", 1)
@@ -241,13 +260,15 @@ class BaseMicrobiomeExplorer(wist.StreamlitWidget):
     def update_options(self) -> None:
         """Update the menu selection items based on the user inputs."""
 
-        # Update the Ordination and Abundant Organism plots
+        # Update the color_by and filter_by fields of all appropriate elements
         for plot_type in [
             "ordination",
             "abundant_orgs",
             "alpha_diversity",
             "beta_diversity",
             "differential_abundance",
+            "single_organism",
+            "compare_two_organisms",
         ]:
 
             # For each of the elements of this type
@@ -265,3 +286,19 @@ class BaseMicrobiomeExplorer(wist.StreamlitWidget):
                 )
                 # Update the filter_by for all plot types
                 plot_elem.update_options(self.sample_filters(), "filter_by")
+
+        # Update the organism list
+        for plot_type, menu_name in [
+            ("single_organism", "org"),
+            ("compare_two_organisms", "org1"),
+            ("compare_two_organisms", "org2"),
+        ]:
+
+            # For each of the elements of this type
+            for plot_elem in self._find_child(plot_type):
+
+                # Update the 'org' selector
+                plot_elem.update_options(
+                    self.org_list(),
+                    menu_name
+                )

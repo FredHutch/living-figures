@@ -142,6 +142,11 @@ class DifferentialAbundance(MicrobiomePlot):
             filter=kwargs["filter_by"]
         )
 
+        if abund is None:
+            msg = "Could not find samples with filter"
+            msg = f"{msg} {kwargs['filter_by']}"
+            return None, msg
+
         # Get the annotations
         annot_df = _self._root().sample_annotations()
         color_by = kwargs["color_by"]

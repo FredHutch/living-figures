@@ -6,3 +6,6 @@ from living_figures.bio.fom.widgets.microbiome.alpha_diversity import AlphaDiver
 from living_figures.bio.fom.widgets.microbiome.beta_diversity import BetaDiversity # noqa
 from living_figures.bio.fom.widgets.microbiome.differential_abundance import DifferentialAbundance # noqa
 from living_figures.bio.fom.widgets.microbiome.base_widget import BaseMicrobiomeExplorer # noqa
+from living_figures.bio.fom.widgets.microbiome.single_organism import SingleOrganism # noqa
+from living_figures.bio.fom.widgets.microbiome.compare_two_organisms import CompareTwoOrganisms # noqa
+from living_figures.bio.fom.widgets.microbiome.main import MicrobiomeExplorer # noqa
