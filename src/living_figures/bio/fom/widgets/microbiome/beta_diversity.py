@@ -4,7 +4,6 @@ import widgets.streamlit as wist
 from living_figures.bio.fom.widgets.microbiome.base_plots import MicrobiomePlot
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 from scipy.spatial import distance
 from scipy import stats
 import streamlit as st

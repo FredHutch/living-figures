@@ -174,7 +174,7 @@ class SingleOrganism(MicrobiomePlot):
         abund_hash,
         annot_hash
     ):
-        
+
         # Get the abundances of the organism
         org_abund = _self.get_org_abund(org, filter_by, abund_hash, annot_hash)
 
