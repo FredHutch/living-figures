@@ -26,12 +26,12 @@ project ([doi: 10.1038/nmeth.4468](https://doi.org/10.1038/nmeth.4468)).
 
 | Disease                          | Browser                                  | Num. Studies | Num. Samples |
 | -------                          | -------                                  | ------------ | ------------ |
-| None                             | [link](PanEpigenome-base.html)           | N/A          | N/A          |
-| Inflammatory Bowel Disease (IBD) | [link](PanEpigenome-CMD_IBD.html)        | 6            | 2,881        |
-| Colorectal Cancer (CRC)          | [link](PanEpigenome-CMD_CRC.html)        | 11           | 1,395        |
-| Cirrhosis                        | [link](PanEpigenome-CMD_cirrhosis.html)  | 2            | 282          |
-| Type 1 Diabetes (T1D)            | [link](PanEpigenome-CMD_T1D.html)        | 3            | 214          |
-| Shiga-toxigenic E. coli (STEC)   | [link](PanEpigenome-CMD_STEC.html)       | 1            | 42           |
+| None                             | [link](MicrobiomeExplorer-base.html)           | N/A          | N/A          |
+| Inflammatory Bowel Disease (IBD) | [link](MicrobiomeExplorer-CMD_IBD.html)        | 6            | 2,881        |
+| Colorectal Cancer (CRC)          | [link](MicrobiomeExplorer-CMD_CRC.html)        | 11           | 1,395        |
+| Cirrhosis                        | [link](MicrobiomeExplorer-CMD_cirrhosis.html)  | 2            | 282          |
+| Type 1 Diabetes (T1D)            | [link](MicrobiomeExplorer-CMD_T1D.html)        | 3            | 214          |
+| Shiga-toxigenic E. coli (STEC)   | [link](MicrobiomeExplorer-CMD_STEC.html)       | 1            | 42           |
 
 ### Input Data
 
