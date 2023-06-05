@@ -3,8 +3,6 @@
 from copy import deepcopy
 import logging
 from pathlib import Path
-from zipfile import ZipFile
-import pandas as pd
 import sys
 from living_figures.bio.fom.widgets.microbiome import MicrobiomeExplorer
 import os
@@ -40,10 +38,6 @@ blank_browser.to_html(Path(fp))
 # Make a static render for each of the test datasets
 data_dir = Path("src/living_figures/bio/fom/widgets/microbiome/example_data/curatedMetagenomicData/")
 for abund_fp in data_dir.glob("*.abund.csv"):
-
-    # Skip the CRC dataset, which is quite large
-    if "CRC" in abund_fp:
-        continue
 
     # Make a copy of the blank widget
     org_browser = deepcopy(blank_browser)

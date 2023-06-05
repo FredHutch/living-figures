@@ -71,9 +71,9 @@ class MicrobiomeExplorer(BaseMicrobiomeExplorer):
                         CompareTwoOrganisms(id="compare_two_organisms")
                     ]
                 ))
-                for i in range(20)
+                for i in range(7)
             ],
-            value=[True] + [False for _ in range(19)]
+            value=[True for _ in range(7)]
         )
     ]
 
