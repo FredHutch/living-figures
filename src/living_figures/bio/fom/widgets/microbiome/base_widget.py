@@ -4,8 +4,6 @@ import numpy as np
 import pandas as pd
 import widgets.streamlit as wist
 from widgets.base.exceptions import WidgetFunctionException
-from living_figures.helpers import parse_numeric
-from living_figures.helpers import is_numeric
 
 
 class BaseMicrobiomeExplorer(wist.StreamlitWidget):
@@ -179,7 +177,7 @@ class BaseMicrobiomeExplorer(wist.StreamlitWidget):
             return None
 
         # Try to convert any values to numeric, if possible
-        annots = parse_numeric(annots)
+        annots = self._root()._parse_numeric(annots)
 
         # Return the data which passes this filtering regime
         return annots
@@ -238,7 +236,7 @@ class BaseMicrobiomeExplorer(wist.StreamlitWidget):
         for cname, cvals in annots.items():
 
             # If the column is numeric
-            if is_numeric(cvals):
+            if self._root()._is_numeric(cvals):
 
                 # Add it to the list
                 colors.append(cname)

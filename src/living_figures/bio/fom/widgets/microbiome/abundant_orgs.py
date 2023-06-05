@@ -1,6 +1,5 @@
 from living_figures.bio.fom.widgets.microbiome.base_plots import MicrobiomePlot
 from living_figures.helpers.constants import tax_levels
-from living_figures.helpers.parse_numeric import is_numeric
 from living_figures.helpers.scaling import convert_text_to_scalar
 from living_figures.helpers.sorting import sort_table
 import widgets.streamlit as wist
@@ -418,7 +417,7 @@ class AbundantOrgs(MicrobiomePlot):
 
         # For any text columns, scale to a number
         for cname in annot_df:
-            if not is_numeric(annot_df[cname]):
+            if not self._root()._is_numeric(annot_df[cname]):
                 annot_df = annot_df.assign(**{
                     cname: convert_text_to_scalar(annot_df[cname])
                 })

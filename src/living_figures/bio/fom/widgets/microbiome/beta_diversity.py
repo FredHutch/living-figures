@@ -8,7 +8,6 @@ from scipy.spatial import distance
 from scipy import stats
 import streamlit as st
 from living_figures.helpers.constants import tax_levels
-from living_figures.helpers import is_numeric
 
 
 class BetaDiversity(MicrobiomePlot):
@@ -120,7 +119,7 @@ class BetaDiversity(MicrobiomePlot):
         if color_by is not None:
 
             # Add a label for that comparison
-            if is_numeric(sample_annots[color_by]):
+            if self._root()._is_numeric(sample_annots[color_by]):
                 comparison_values = dm.apply(
                     lambda r: _self.delta_meta(
                         r, sample_annots[color_by]
@@ -337,7 +336,7 @@ class BetaDiversity(MicrobiomePlot):
         if color_by is not None:
 
             # If the value is numeric
-            if is_numeric(plot_df[color_by]):
+            if self._root()._is_numeric(plot_df[color_by]):
                 # Make a scatterplot
                 plot_f = px.scatter
                 # With the x-axis as the metadata

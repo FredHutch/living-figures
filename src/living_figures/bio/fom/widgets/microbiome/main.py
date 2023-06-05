@@ -9,6 +9,9 @@ from living_figures.bio.fom.widgets.microbiome import DifferentialAbundance
 from living_figures.bio.fom.widgets.microbiome import SingleOrganism
 from living_figures.bio.fom.widgets.microbiome import CompareTwoOrganisms
 from living_figures.bio.fom.widgets.microbiome.base_widget import BaseMicrobiomeExplorer # noqa
+from living_figures.helpers.parse_numeric import is_numeric
+from living_figures.helpers import parse_numeric
+import streamlit as st
 import widgets.streamlit as wist
 
 
@@ -116,6 +119,14 @@ class MicrobiomeExplorer(BaseMicrobiomeExplorer):
         self.sidebar_container.markdown(
             f"[Microbiome Explorer Documentation]({docs_url})"
         )
+
+    @st.cache_data
+    def _is_numeric(_self, cvals):
+        return is_numeric(cvals)
+
+    @st.cache_data
+    def _parse_numeric(_self, annots):
+        return parse_numeric(annots)
 
 
 if __name__ == "__main__":

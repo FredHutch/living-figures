@@ -4,7 +4,6 @@ from statsmodels.stats.multitest import multipletests
 import streamlit as st
 from living_figures.bio.fom.widgets.microbiome.base_plots import MicrobiomePlot
 from living_figures.helpers.constants import tax_levels
-from living_figures.helpers.parse_numeric import is_numeric
 import widgets.streamlit as wist
 import pandas as pd
 import plotly.express as px
@@ -163,7 +162,7 @@ class DifferentialAbundance(MicrobiomePlot):
         da_df, msg = _self.calc_diff_abund(
             abund.reindex(columns=meta.index),
             meta,
-            continuous=is_numeric(annot_df[color_by])
+            continuous=self._root()._is_numeric(annot_df[color_by])
         )
 
         fig = px.scatter(

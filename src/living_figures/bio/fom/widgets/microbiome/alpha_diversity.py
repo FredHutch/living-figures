@@ -3,7 +3,6 @@ import streamlit as st
 from typing import Union
 from living_figures.bio.fom.widgets.microbiome.base_plots import MicrobiomePlot
 from living_figures.helpers.constants import tax_levels
-from living_figures.helpers.parse_numeric import is_numeric
 import widgets.streamlit as wist
 import pandas as pd
 import plotly.express as px
@@ -210,7 +209,7 @@ class AlphaDiversity(MicrobiomePlot):
             columns=[metric, color_by]
         ).dropna()
 
-        if is_numeric(stats_df[color_by]):
+        if self._root()._is_numeric(stats_df[color_by]):
             return _self.spearman(stats_df, metric, color_by)
         else:
             return _self.anova(stats_df, metric, color_by)
@@ -288,7 +287,7 @@ class AlphaDiversity(MicrobiomePlot):
             ).dropna()
 
             # If the value is numeric
-            if is_numeric(adiv[color_by]):
+            if self._root()._is_numeric(adiv[color_by]):
                 # Make a scatterplot
                 plot_f = px.scatter
                 # With the x-axis as the metadata
@@ -361,7 +360,7 @@ class AlphaDiversity(MicrobiomePlot):
             plot_data["color"] = color_by
 
             # If the value is categorical
-            if not is_numeric(adiv[color_by]):
+            if not self._root()._is_numeric(adiv[color_by]):
 
                 # Sort by category
                 plot_data["data_frame"] = plot_data["data_frame"].sort_values(
