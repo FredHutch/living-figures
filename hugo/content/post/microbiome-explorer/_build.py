@@ -50,6 +50,6 @@ for abund_fp in data_dir.glob("*.abund.csv"):
     org_browser._get_child("data", "annots").parse_files(annot_fp)
 
     # Save the widget with data populated
-    fp = folder / f"PanEpigenome-{abund_fp.name.replace('.abund.csv', '')}.html"
+    fp = folder / f"MicrobiomeExplorer-{abund_fp.name.replace('.abund.csv', '')}.html"
     logging.info(f"Saving to {fp}")
     org_browser.to_html(Path(fp))

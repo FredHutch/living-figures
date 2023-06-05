@@ -1016,7 +1016,7 @@ class DifferentialAbundance(MicrobiomePlot):
         da_df, msg = _self.calc_diff_abund(
             abund.reindex(columns=meta.index),
             meta,
-            continuous=is_numeric(annot_df[color_by])
+            continuous=self._root()._is_numeric(annot_df[color_by])
         )
 
         fig = px.scatter(
@@ -1309,7 +1309,7 @@ class BetaDiversity(MicrobiomePlot):
         if color_by is not None:
 
             # Add a label for that comparison
-            if is_numeric(sample_annots[color_by]):
+            if self._root()._is_numeric(sample_annots[color_by]):
                 comparison_values = dm.apply(
                     lambda r: _self.delta_meta(
                         r, sample_annots[color_by]
@@ -1534,7 +1534,7 @@ class BetaDiversity(MicrobiomePlot):
         if color_by is not None:
 
             # If the value is numeric
-            if is_numeric(plot_df[color_by]):
+            if self._root()._is_numeric(plot_df[color_by]):
                 # Make a scatterplot
                 plot_f = px.scatter
                 # With the x-axis as the metadata
@@ -1841,7 +1841,7 @@ class AlphaDiversity(MicrobiomePlot):
             columns=[metric, color_by]
         ).dropna()
 
-        if is_numeric(stats_df[color_by]):
+        if self._root()._is_numeric(stats_df[color_by]):
             return _self.spearman(stats_df, metric, color_by)
         else:
             return _self.anova(stats_df, metric, color_by)
@@ -1922,7 +1922,7 @@ class AlphaDiversity(MicrobiomePlot):
             ).dropna()
 
             # If the value is numeric
-            if is_numeric(adiv[color_by]):
+            if self._root()._is_numeric(adiv[color_by]):
                 # Make a scatterplot
                 plot_f = px.scatter
                 # With the x-axis as the metadata
@@ -1996,7 +1996,7 @@ class AlphaDiversity(MicrobiomePlot):
             plot_data["color"] = color_by
 
             # If the value is categorical
-            if not is_numeric(adiv[color_by]):
+            if not self._root()._is_numeric(adiv[color_by]):
 
                 # Sort by category
                 plot_data["data_frame"] = plot_data["data_frame"].sort_values(
@@ -2988,7 +2988,7 @@ class AbundantOrgs(MicrobiomePlot):
 
         # For any text columns, scale to a number
         for cname in annot_df:
-            if not is_numeric(annot_df[cname]):
+            if not self._root()._is_numeric(annot_df[cname]):
                 annot_df = annot_df.assign(**{
                     cname: convert_text_to_scalar(annot_df[cname])
                 })
@@ -3373,7 +3373,7 @@ class BaseMicrobiomeExplorer(StreamlitWidget):
             return None
 
         # Try to convert any values to numeric, if possible
-        annots = parse_numeric(annots)
+        annots = self._root()._parse_numeric(annots)
 
         # Return the data which passes this filtering regime
         return annots
@@ -3434,7 +3434,7 @@ class BaseMicrobiomeExplorer(StreamlitWidget):
         for cname, cvals in annots.items():
 
             # If the column is numeric
-            if is_numeric(cvals):
+            if self._root()._is_numeric(cvals):
 
                 # Add it to the list
                 colors.append(cname)
@@ -10917,6 +10917,16 @@ class MicrobiomeExplorer(BaseMicrobiomeExplorer):
         self.sidebar_container.markdown(
             f"[Microbiome Explorer Documentation]({docs_url})"
         )
+
+
+    @st.cache_data
+    def _is_numeric(_self, cvals):
+        return is_numeric(cvals)
+
+
+    @st.cache_data
+    def _parse_numeric(_self, annots):
+        return parse_numeric(annots)
 
 
 
